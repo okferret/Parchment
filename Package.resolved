@@ -1,0 +1,15 @@
+{
+  "originHash" : "737cbf7f3d5345c519988dcfceebf67ddcca73160a52d1f2b176891afd8aaff3",
+  "pins" : [
+    {
+      "identity" : "uchardet",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/okferret/Uchardet.git",
+      "state" : {
+        "revision" : "7e57d66b594463bada0a17e6c1a2b1ddd1fc6378",
+        "version" : "0.0.5"
+      }
+    }
+  ],
+  "version" : 3
+}

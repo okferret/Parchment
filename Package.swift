@@ -1,0 +1,42 @@
+// swift-tools-version: 6.3
+// The swift-tools-version declares the minimum version of Swift required to build this package.
+
+import PackageDescription
+
+let package = Package(
+    name: "Parchment",
+    platforms: [
+        .iOS(.v13),
+        .tvOS(.v13),
+        .watchOS(.v6),
+        .visionOS(.v1),
+    ],
+    products: [
+        // Products define the executables and libraries a package produces, making them visible to other packages.
+        .library(
+            name: "Parchment",
+            targets: ["Parchment"]
+        ),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/okferret/Uchardet.git", .upToNextMajor(from: "0.0.5")),
+    ],
+    targets: [
+        // Targets are the basic building blocks of a package, defining a module or a test suite.
+        // Targets can depend on other targets in this package and products from dependencies.
+        .target(
+            name: "Parchment",
+            dependencies: [
+                .product(name: "Uchardet", package: "Uchardet"),
+            ],
+            resources: [
+                .process("Assets.xcassets")
+            ]
+        ),
+        .testTarget(
+            name: "ParchmentTests",
+            dependencies: ["Parchment"]
+        ),
+    ],
+    swiftLanguageModes: [.v6]
+)
