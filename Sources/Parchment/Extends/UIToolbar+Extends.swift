@@ -51,33 +51,66 @@ extension CompatibleWrapper where Base: UIToolbar {
     /// A specific blur effect to use for the bar background. This effect is composited first when constructing the bar's background.
     /// - Parameter backgroundEffect: Optional<UIBlurEffect>
     internal func backgroundEffect(_ backgroundEffect: Optional<UIBlurEffect>) {
-        base.standardAppearance.backgroundEffect = backgroundEffect
-        base.compactAppearance?.backgroundEffect = backgroundEffect
+        let standardAppearance = base.standardAppearance.copy()
+        standardAppearance.backgroundEffect = backgroundEffect
+        base.standardAppearance = standardAppearance
+        
+        let compactAppearance = base.compactAppearance?.copy()
+        compactAppearance?.backgroundEffect = backgroundEffect
+        base.compactAppearance = compactAppearance
+        
         if #available(iOS 15.0, *) {
-            base.scrollEdgeAppearance?.backgroundEffect = backgroundEffect
-            base.compactScrollEdgeAppearance?.backgroundEffect = backgroundEffect
+            let scrollEdgeAppearance = base.scrollEdgeAppearance?.copy()
+            scrollEdgeAppearance?.backgroundEffect = backgroundEffect
+            base.scrollEdgeAppearance = scrollEdgeAppearance
+            
+            let compactScrollEdgeAppearance = base.compactScrollEdgeAppearance?.copy()
+            compactScrollEdgeAppearance?.backgroundEffect = backgroundEffect
+            base.compactScrollEdgeAppearance = compactScrollEdgeAppearance
         }
     }
 
     /// A color to use for the bar background. This color is composited over backgroundEffects.
     /// - Parameter backgroundColor: UIColor
     internal func backgroundColor(_ backgroundColor: Optional<UIColor>) {
-        base.standardAppearance.backgroundColor = backgroundColor
-        base.compactAppearance?.backgroundColor = backgroundColor
+        let standardAppearance = base.standardAppearance.copy()
+        standardAppearance.backgroundColor = backgroundColor
+        base.standardAppearance = standardAppearance
+        
+        let compactAppearance = base.compactAppearance?.copy()
+        compactAppearance?.backgroundColor = backgroundColor
+        base.compactAppearance = compactAppearance
+        
         if #available(iOS 15.0, *) {
-            base.scrollEdgeAppearance?.backgroundColor = backgroundColor
-            base.compactScrollEdgeAppearance?.backgroundColor = backgroundColor
+            let scrollEdgeAppearance = base.scrollEdgeAppearance?.copy()
+            scrollEdgeAppearance?.backgroundColor = backgroundColor
+            base.scrollEdgeAppearance = scrollEdgeAppearance
+            
+            let compactScrollEdgeAppearance = base.compactScrollEdgeAppearance?.copy()
+            compactScrollEdgeAppearance?.backgroundColor = backgroundColor
+            base.compactScrollEdgeAppearance = compactScrollEdgeAppearance
         }
     }
  
     /// An image to use for the bar background. This image is composited over the backgroundColor, and resized per the backgroundImageContentMode.
     /// - Parameter backgroundImage: UIImage
     internal func backgroundImage(_ backgroundImage: Optional<UIImage>) {
-        base.standardAppearance.backgroundImage = backgroundImage
-        base.compactAppearance?.backgroundImage = backgroundImage
+        let standardAppearance = base.standardAppearance.copy()
+        standardAppearance.backgroundImage = backgroundImage
+        base.standardAppearance = standardAppearance
+        
+        let compactAppearance = base.compactAppearance?.copy()
+        compactAppearance?.backgroundImage = backgroundImage
+        base.compactAppearance = compactAppearance
+        
         if #available(iOS 15.0, *) {
-            base.scrollEdgeAppearance?.backgroundImage = backgroundImage
-            base.compactScrollEdgeAppearance?.backgroundImage = backgroundImage
+            let scrollEdgeAppearance = base.scrollEdgeAppearance?.copy()
+            scrollEdgeAppearance?.backgroundImage = backgroundImage
+            base.scrollEdgeAppearance = scrollEdgeAppearance
+            
+            let compactScrollEdgeAppearance = base.compactScrollEdgeAppearance?.copy()
+            compactScrollEdgeAppearance?.backgroundImage = backgroundImage
+            base.compactScrollEdgeAppearance = compactScrollEdgeAppearance
         }
     }
 
@@ -85,11 +118,22 @@ extension CompatibleWrapper where Base: UIToolbar {
     /// UIViewContentModeRedraw will be reinterpreted as UIViewContentModeScaleToFill.
     /// - Parameter backgroundImageContentMode: UIViewContentMode
     internal func backgroundImageContentMode(_ backgroundImageContentMode: UIView.ContentMode) {
-        base.standardAppearance.backgroundImageContentMode = backgroundImageContentMode
-        base.compactAppearance?.backgroundImageContentMode = backgroundImageContentMode
+        let standardAppearance = base.standardAppearance.copy()
+        standardAppearance.backgroundImageContentMode = backgroundImageContentMode
+        base.standardAppearance = standardAppearance
+        
+        let compactAppearance = base.compactAppearance?.copy()
+        compactAppearance?.backgroundImageContentMode = backgroundImageContentMode
+        base.compactAppearance = compactAppearance
+        
         if #available(iOS 15.0, *) {
-            base.scrollEdgeAppearance?.backgroundImageContentMode = backgroundImageContentMode
-            base.compactScrollEdgeAppearance?.backgroundImageContentMode = backgroundImageContentMode
+            let scrollEdgeAppearance = base.scrollEdgeAppearance?.copy()
+            scrollEdgeAppearance?.backgroundImageContentMode = backgroundImageContentMode
+            base.scrollEdgeAppearance = scrollEdgeAppearance
+            
+            let compactScrollEdgeAppearance = base.compactScrollEdgeAppearance?.copy()
+            compactScrollEdgeAppearance?.backgroundImageContentMode = backgroundImageContentMode
+            base.compactScrollEdgeAppearance = compactScrollEdgeAppearance
         }
     }
 
@@ -100,33 +144,66 @@ extension CompatibleWrapper where Base: UIToolbar {
     ///  If the shadowImage is not a template image, then it will be rendered regardless of the value of shadowColor.
     /// - Parameter shadowColor: Optional<UIColor>
     internal func shadowColor(_ shadowColor: Optional<UIColor>) {
-        base.standardAppearance.shadowColor = shadowColor
-        base.compactAppearance?.shadowColor = shadowColor
+        let standardAppearance = base.standardAppearance.copy()
+        standardAppearance.shadowColor = shadowColor
+        base.standardAppearance = standardAppearance
+        
+        let compactAppearance = base.compactAppearance?.copy()
+        compactAppearance?.shadowColor = shadowColor
+        base.compactAppearance = compactAppearance
+        
         if #available(iOS 15.0, *) {
-            base.scrollEdgeAppearance?.shadowColor = shadowColor
-            base.compactScrollEdgeAppearance?.shadowColor = shadowColor
+            let scrollEdgeAppearance = base.scrollEdgeAppearance?.copy()
+            scrollEdgeAppearance?.shadowColor = shadowColor
+            base.scrollEdgeAppearance = scrollEdgeAppearance
+            
+            let compactScrollEdgeAppearance = base.compactScrollEdgeAppearance?.copy()
+            compactScrollEdgeAppearance?.shadowColor = shadowColor
+            base.compactScrollEdgeAppearance = compactScrollEdgeAppearance
         }
     }
     
     /// Use an image for the shadow. See shadowColor for how they interact.
     /// - Parameter shadowImage: Optional<UIImage>
     internal func shadowImage(_ shadowImage: Optional<UIImage>) {
-        base.standardAppearance.shadowImage = shadowImage
-        base.compactAppearance?.shadowImage = shadowImage
+        let standardAppearance = base.standardAppearance.copy()
+        standardAppearance.shadowImage = shadowImage
+        base.standardAppearance = standardAppearance
+        
+        let compactAppearance = base.compactAppearance?.copy()
+        compactAppearance?.shadowImage = shadowImage
+        base.compactAppearance = compactAppearance
+        
         if #available(iOS 15.0, *) {
-            base.scrollEdgeAppearance?.shadowImage = shadowImage
-            base.compactScrollEdgeAppearance?.shadowImage = shadowImage
+            let scrollEdgeAppearance = base.scrollEdgeAppearance?.copy()
+            scrollEdgeAppearance?.shadowImage = shadowImage
+            base.scrollEdgeAppearance = scrollEdgeAppearance
+            
+            let compactScrollEdgeAppearance = base.compactScrollEdgeAppearance?.copy()
+            compactScrollEdgeAppearance?.shadowImage = shadowImage
+            base.compactScrollEdgeAppearance = compactScrollEdgeAppearance
         }
     }
 
     /// The appearance for plain-style bar button items
     /// - Parameter buttonAppearance: UIBarButtonItemAppearance
     internal func buttonAppearance(_ buttonAppearance: UIBarButtonItemAppearance) {
-        base.standardAppearance.buttonAppearance = buttonAppearance
-        base.compactAppearance?.buttonAppearance = buttonAppearance
+        let standardAppearance = base.standardAppearance.copy()
+        standardAppearance.buttonAppearance = buttonAppearance
+        base.standardAppearance = standardAppearance
+        
+        let compactAppearance = base.compactAppearance?.copy()
+        compactAppearance?.buttonAppearance = buttonAppearance
+        base.compactAppearance = compactAppearance
+        
         if #available(iOS 15.0, *) {
-            base.scrollEdgeAppearance?.buttonAppearance = buttonAppearance
-            base.compactScrollEdgeAppearance?.buttonAppearance = buttonAppearance
+            let scrollEdgeAppearance = base.scrollEdgeAppearance?.copy()
+            scrollEdgeAppearance?.buttonAppearance = buttonAppearance
+            base.scrollEdgeAppearance = scrollEdgeAppearance
+            
+            let compactScrollEdgeAppearance = base.compactScrollEdgeAppearance?.copy()
+            compactScrollEdgeAppearance?.buttonAppearance = buttonAppearance
+            base.compactScrollEdgeAppearance = compactScrollEdgeAppearance
         }
     }
 
@@ -136,21 +213,43 @@ extension CompatibleWrapper where Base: UIToolbar {
     /// - Parameter prominentButtonAppearance: UIBarButtonItemAppearance
     @available(iOS 26.0, *)
     internal func prominentButtonAppearance(_ prominentButtonAppearance: UIBarButtonItemAppearance) {
-        base.standardAppearance.prominentButtonAppearance = prominentButtonAppearance
-        base.compactAppearance?.prominentButtonAppearance = prominentButtonAppearance
-        base.scrollEdgeAppearance?.prominentButtonAppearance = prominentButtonAppearance
-        base.compactScrollEdgeAppearance?.prominentButtonAppearance = prominentButtonAppearance
+        let standardAppearance = base.standardAppearance.copy()
+        standardAppearance.prominentButtonAppearance = prominentButtonAppearance
+        base.standardAppearance = standardAppearance
+        
+        let compactAppearance = base.compactAppearance?.copy()
+        compactAppearance?.prominentButtonAppearance = prominentButtonAppearance
+        base.compactAppearance = compactAppearance
+        
+        let scrollEdgeAppearance = base.scrollEdgeAppearance?.copy()
+        scrollEdgeAppearance?.prominentButtonAppearance = prominentButtonAppearance
+        base.scrollEdgeAppearance = scrollEdgeAppearance
+        
+        let compactScrollEdgeAppearance = base.compactScrollEdgeAppearance?.copy()
+        compactScrollEdgeAppearance?.prominentButtonAppearance = prominentButtonAppearance
+        base.compactScrollEdgeAppearance = compactScrollEdgeAppearance
     }
 
     /// The appearance for done-style bar button items
     /// - Parameter doneButtonAppearance: UIBarButtonItemAppearance
     @available(iOS, introduced: 13.0, deprecated: 26.0)
     internal func doneButtonAppearance(_ doneButtonAppearance: UIBarButtonItemAppearance) {
-        base.standardAppearance.doneButtonAppearance = doneButtonAppearance
-        base.compactAppearance?.doneButtonAppearance = doneButtonAppearance
+        let standardAppearance = base.standardAppearance.copy()
+        standardAppearance.doneButtonAppearance = doneButtonAppearance
+        base.standardAppearance = standardAppearance
+        
+        let compactAppearance = base.compactAppearance?.copy()
+        compactAppearance?.doneButtonAppearance = doneButtonAppearance
+        base.compactAppearance = compactAppearance
+        
         if #available(iOS 15.0, *) {
-            base.scrollEdgeAppearance?.doneButtonAppearance = doneButtonAppearance
-            base.compactScrollEdgeAppearance?.doneButtonAppearance = doneButtonAppearance
+            let scrollEdgeAppearance = base.scrollEdgeAppearance?.copy()
+            scrollEdgeAppearance?.doneButtonAppearance = doneButtonAppearance
+            base.scrollEdgeAppearance = scrollEdgeAppearance
+            
+            let compactScrollEdgeAppearance = base.compactScrollEdgeAppearance?.copy()
+            compactScrollEdgeAppearance?.doneButtonAppearance = doneButtonAppearance
+            base.compactScrollEdgeAppearance = compactScrollEdgeAppearance
         }
     }
 }

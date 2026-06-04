@@ -19,10 +19,23 @@ extension MenuViewController {
     }
 }
 
+protocol MenuViewControllerDelegate: UINavigationControllerDelegate {
+    func controller(_ controller: MenuViewController, backwardActionWith sender: UIButton)
+    func controller(_ controller: MenuViewController, forewardActionWith sender: UIButton)
+    func controller(_ controller: MenuViewController, progressActionWtih value: Float)
+    func controller(_ controller: MenuViewController, brightnessActionWith brightness: CGFloat)
+    func controller(_ controller: MenuViewController, fontActionWith uiFont: UIFont)
+    func controller(_ controller: MenuViewController, themeActionWith theme: Theme)
+    func controller(_ controller: MenuViewController, transitionActionWith transitionStyle: TransitionStyle)
+}
+
 /// MenuViewController
 class MenuViewController: UINavigationController {
     
     //  MARK: - 公开属性
+    
+    /// Optional<MenuViewControllerDelegate>
+    internal weak var menuDelegate: Optional<MenuViewControllerDelegate> = .none
     
     //  MARK: - 私有属性
     
@@ -62,16 +75,24 @@ class MenuViewController: UINavigationController {
     /// 展示菜单
     /// - Parameter menuType: MenuType
     internal func showMenuWith(_ menuType: MenuType) {
-        let controller: UIViewController
         switch menuType {
         case .chapter:
-            controller = ChapterViewController(forWhat: fileURL, configuration: configuration)
+            let controller: ChapterViewController = .init(forWhat: fileURL, configuration: configuration)
+            showWith(controller)
         case .progress:
-            controller = ProgressViewController(forWhat: fileURL, configuration: configuration)
+            let controller: ProgressViewController = .init(forWhat: fileURL, configuration: configuration)
+            controller.delegate = self
+            showWith(controller)
         case .other:
-            controller = OtherViewController(forWhat: fileURL, configuration: configuration)
+            let controller: ConfigureViewController = .init(forWhat: fileURL, configuration: configuration)
+            controller.delegate = self
+            showWith(controller)
         }
-        
+    }
+    
+    /// showWith
+    /// - Parameter controller: UIViewController
+    private func showWith(_ controller: UIViewController) {
         if viewControllers.count > 1 {
             let newArray: Array<UIViewController> = [viewControllers[0], controller]
             setViewControllers(newArray, animated: true)
@@ -103,12 +124,73 @@ extension MenuViewController: UINavigationControllerDelegate {
                                        from fromVC: UIViewController,
                                        to toVC: UIViewController) -> (any UIViewControllerAnimatedTransitioning)? {
         switch operation {
-        case .push: return MenuTransitionAnimator(transitionType: .push)
-        case .pop:  return MenuTransitionAnimator(transitionType: .pop)
+        case .push: return MenuTransitionAnimator(.push)
+        case .pop:  return MenuTransitionAnimator(.pop)
         default:
             return .none
         }
     }
+}
+
+//  MARK: -  ProgressViewControllerDelegate, ConfigureViewControllerDelegate
+extension MenuViewController: @preconcurrency ProgressViewControllerDelegate, @preconcurrency ConfigureViewControllerDelegate {
+    
+    /// backwardActionWith
+    /// - Parameters:
+    ///   - controller: ProgressViewController
+    ///   - sender: UIButton
+    internal func controller(_ controller: ProgressViewController, backwardActionWith sender: UIButton) {
+        menuDelegate?.controller(self, backwardActionWith: sender)
+    }
+    
+    /// forewardActionWith
+    /// - Parameters:
+    ///   - controller: ProgressViewController
+    ///   - sender: UIButton
+    internal func controller(_ controller: ProgressViewController, forewardActionWith sender: UIButton) {
+        menuDelegate?.controller(self, forewardActionWith: sender)
+    }
+    
+    /// progressActionWtih
+    /// - Parameters:
+    ///   - controller: ProgressViewController
+    ///   - value: Float
+    internal func controller(_ controller: ProgressViewController, progressActionWtih value: Float) {
+        menuDelegate?.controller(self, progressActionWtih: value)
+    }
+    
+    /// brightnessActionWith
+    /// - Parameters:
+    ///   - controller: ConfigureViewController
+    ///   - brightness: CGFloat
+    internal func controller(_ controller: ConfigureViewController, brightnessActionWith brightness: CGFloat) {
+        menuDelegate?.controller(self, brightnessActionWith: brightness)
+    }
+    
+    /// fontActionWith
+    /// - Parameters:
+    ///   - controller: ConfigureViewController
+    ///   - value: Float
+    internal func controller(_ controller: ConfigureViewController, fontActionWith value: Float) {
+        menuDelegate?.controller(self, fontActionWith: .pingfangSC(ofSize: CGFloat(value)))
+    }
+    
+    /// themeActionWith
+    /// - Parameters:
+    ///   - controller: ConfigureViewController
+    ///   - theme: Theme
+    internal func controller(_ controller: ConfigureViewController, themeActionWith theme: Theme) {
+        menuDelegate?.controller(self, themeActionWith: theme)
+    }
+    
+    /// transitionActionWith
+    /// - Parameters:
+    ///   - controller: ConfigureViewController
+    ///   - transitionStyle: TransitionStyle
+    internal func controller(_ controller: ConfigureViewController, transitionActionWith transitionStyle: TransitionStyle) {
+        menuDelegate?.controller(self, transitionActionWith: transitionStyle)
+    }
+    
 }
 
 #endif

@@ -46,13 +46,21 @@ class ContentViewController: UIViewController {
         initialize()
     }
     
+    /// traitCollectionDidChange
+    /// - Parameter previousTraitCollection: UITraitCollection
+    internal override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        // next
+        view.backgroundColor = configuration.theme.background
+    }
+    
 }
 
 extension ContentViewController {
     
     /// 初始化
     private func initialize() {
-        view.backgroundColor = configuration.colors.background
+        view.backgroundColor = configuration.theme.background
     }
 }
 

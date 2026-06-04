@@ -28,7 +28,7 @@ class MenuTransitionAnimator: NSObject , UIViewControllerAnimatedTransitioning {
     /// - Parameters:
     ///   - transitionType: TransitionType
     ///   - duration: TimeInterval
-    internal init(transitionType: TransitionType, duration: TimeInterval = 0.25) {
+    internal init(_ transitionType: TransitionType, duration: TimeInterval = 0.25) {
         self.transitionType = transitionType
         self.duration = duration
         super.init()
