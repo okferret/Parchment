@@ -91,13 +91,14 @@ class ProgressViewController: UIViewController, MenuContentViewController {
         _sliderView.translatesAutoresizingMaskIntoConstraints = false
         _sliderView.heightAnchor.constraint(equalToConstant: 28.0).isActive = true
         _sliderView.backgroundColor = .clear
-        _sliderView.addTarget(self, action: #selector(slideActionHandler(_:)), for: .valueChanged)
         _sliderView.minimumTrackTintColor = .clear
         _sliderView.maximumTrackTintColor = configuration.theme.background
         _sliderView.thumbTintColor = configuration.theme.thumbTintColor
         _sliderView.minimumValue = 0.0
         _sliderView.maximumValue = 1.0
-        _sliderView.trackValues = Array(0...10).map { Float($0) / 10 }
+        _sliderView.trackValues = Array(0...100).map { Float($0) / 100 }
+        _sliderView.isTrackValues = false
+        _sliderView.delegate = self
         return _sliderView
     }()
     
@@ -149,6 +150,7 @@ class ProgressViewController: UIViewController, MenuContentViewController {
             guard let this = self, let newValue: Float = obs.newValue else { return }
             this.leftButton.isEnabled = newValue > 0.0
             this.rightButton.isEnabled = newValue < 1.0
+            print("observation =>", obs.newValue)
         })
     }
     
@@ -203,22 +205,6 @@ extension ProgressViewController {
         ])
     }
     
-    /// slideActionHandler
-    /// - Parameter sender: UISliderView
-    @objc private func slideActionHandler(_ sender: UISliderView) {
-        progressLabel.text = "阅读进度：\(percent(for: sender.value))"
-        delegate?.controller(self, progressActionWtih: sliderView.value)
-    }
-    
-    /// 计算百分比
-    /// - Parameter newValue: Float
-    /// - Returns: String
-    private func percent(for newValue: Float) -> String {
-        let multiplier = pow(10.0, Double(2))
-        let rounded = round(Double(newValue) * 100 * multiplier) / multiplier
-        return String(format: "%.\(1)f%%", rounded)
-    }
-    
     /// 点击事件
     /// - Parameter sender: UIButton
     @objc private func buttonActionHandler(_ sender: UIButton) {
@@ -231,4 +217,27 @@ extension ProgressViewController {
         }
     }
 }
+
+//  MARK: - UISliderViewDelegate
+extension ProgressViewController: @preconcurrency UISliderViewDelegate {
+    
+    /// trackValueAction
+    /// - Parameters:
+    ///   - sliderView: UISliderView
+    ///   - trackValue: Float
+    internal func sliderView(_ sliderView: UISliderView, trackValueAction trackValue: Float) {
+        delegate?.controller(self, progressActionWtih: trackValue)
+    }
+    
+    /// slideAction
+    /// - Parameters:
+    ///   - sliderView: UISliderView
+    ///   - slideValue: Float
+    internal func sliderView(_ sliderView: UISliderView, slideAction slideValue: Float) {
+        progressLabel.text = "阅读进度：\(NumberFormatter.default.hub.string(from: slideValue, numberStyle: .percent))"
+    }
+    
+}
+
+
 #endif

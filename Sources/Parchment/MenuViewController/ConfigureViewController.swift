@@ -253,7 +253,7 @@ class ConfigureViewController: UIViewController, MenuContentViewController {
         // 初始化
         initialize()
         // 注册通知
-        NotificationCenter.default.addObserver(self, selector: #selector(notificationHandler(_:)), name: UIScreen.brightnessDidChangeNotification, object: .none)
+        // NotificationCenter.default.addObserver(self, selector: #selector(notificationHandler(_:)), name: UIScreen.brightnessDidChangeNotification, object: .none)
     }
     
     /// traitCollectionDidChange

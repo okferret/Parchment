@@ -67,9 +67,16 @@ class ChapterViewController: UIViewController, MenuContentViewController {
         _tableView.contentInsetAdjustmentBehavior = .never
         _tableView.backgroundColor = configuration.theme.background
         _tableView.backgroundView = backgroundView
+        _tableView.register(ChapterTableViewCell.self, forCellReuseIdentifier: ChapterTableViewCell.reusedID)
         return _tableView
     }()
     
+    /// UITableViewDiffableDataSource
+    private lazy var dataSource: UITableViewDiffableDataSource<Int, String> = .init(tableView: tableView) { tableView, indexPath, itemIdentifier in
+        let cell: ChapterTableViewCell = tableView.dequeueReusableCell(withIdentifier: ChapterTableViewCell.reusedID, for: indexPath) as! ChapterTableViewCell
+        
+        return cell
+    }
     
     //  MARK: - 生命周期
     

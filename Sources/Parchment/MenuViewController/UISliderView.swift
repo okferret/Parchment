@@ -24,13 +24,19 @@ protocol UISliderViewDelegate: AnyObject {
     ///   - sliderView: UISliderView
     ///   - trackValue: Float
     func sliderView(_ sliderView: UISliderView, trackValueAction trackValue: Float)
+    
+    /// slideAction
+    /// - Parameters:
+    ///   - sliderView: UISliderView
+    ///   - slideValue: Float
+    func sliderView(_ sliderView: UISliderView, slideAction slideValue: Float)
 }
 
 extension UISliderViewDelegate {
     /// thumbTextAt
-    internal func sliderView(_ sliderView: UISliderView, thumbTextAt trackValue: Float) -> Optional<String> {
-        return .none
-    }
+    internal func sliderView(_ sliderView: UISliderView, thumbTextAt trackValue: Float) -> Optional<String> { return .none }
+    /// sliderValueAction
+    internal func sliderView(_ sliderView: UISliderView, slideAction sliderValue: Float) {}
 }
 
 /// UISliderView
@@ -40,6 +46,9 @@ class UISliderView: UISlider {
     
     /// Array<Float>
     internal var trackValues: Array<Float> = []
+    
+    /// Bool
+    internal var isTrackValues: Bool = true
     
     /// Optional<UISliderViewDelegate>
     internal weak var delegate: Optional<UISliderViewDelegate> = .none
@@ -208,6 +217,7 @@ class UISliderView: UISlider {
         super.setMaximumTrackImage(.init(), for: .normal)
         super.setMinimumTrackImage(.init(), for: .normal)
         super.backgroundColor = .clear
+        self.isContinuous = false
         // 初始化
         initialize()
         // add target
@@ -271,6 +281,8 @@ class UISliderView: UISlider {
             thumbTextLabel.isHidden = true
         }
         thumbTextLabel.center = .init(x: thumbRect.midX, y: thumbRect.midY)
+        // next
+        delegate?.sliderView(self, slideAction: value)
         return thumbRect
     }
     
@@ -333,7 +345,10 @@ extension UISliderView {
     /// trackActionHandler
     /// - Parameter sender: UISliderView
     @objc private func trackActionHandler(_ sender: UISliderView) {
-        if trackValues.isEmpty == false {
+        willChangeValue(forKey: #keyPath(UISliderView.value))
+        defer { didChangeValue(forKey: #keyPath(UISliderView.value)) }
+        // next
+        if isTrackValues == true && trackValues.isEmpty == false {
             if trackValues.contains(sender.value) == true {
                 delegate?.sliderView(self, trackValueAction: sender.value)
             } else {

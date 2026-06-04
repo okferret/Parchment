@@ -89,6 +89,14 @@ final public class ParchmentViewController: UINavigationController {
     /// 配置信息
     private let configuration: Configuration
     
+    /// 记录系统亮度
+    private var brightness: CGFloat = 0.5
+    
+    /// Optional<UIWindow>
+    private var keyWindow: Optional<UIWindow> {
+        return (view.window ?? UIApplication.shared.hub.keyWindow)
+    }
+    
     //  MARK: - 生命周期
     
     /// 构造函数
@@ -141,7 +149,9 @@ final public class ParchmentViewController: UINavigationController {
         // 初始化
         initialize()
         // 添加通知
-        NotificationCenter.default.addObserver(self, selector: #selector(notificaitonHandler(_:)), name: UIScreen.brightnessDidChangeNotification, object: .none)
+        // NotificationCenter.default.addObserver(self, selector: #selector(notificaitonHandler(_:)), name: UIScreen.brightnessDidChangeNotification, object: .none)
+        brightness = keyWindow?.screen.brightness ?? 0.5
+        keyWindow?.screen.brightness = configuration.brightness
     }
 
     deinit {
@@ -177,7 +187,10 @@ extension ParchmentViewController {
     @objc private func itemActionHandler(_ sender: UIBarButtonItem) {
         switch sender {
         case closeItem:
+            // 还原亮度
+            keyWindow?.screen.brightness = brightness
             dismiss(animated: true, completion: .none)
+            
         case bookmarkItem:
             break
         case chapterItem where sender.hub.state == .normal:
