@@ -26,14 +26,13 @@ fileprivate struct UserDefaultsKey: RawRepresentable {
 }
 
 /// Configuration
-@MainActor
+/// Configuration
 final public class Configuration: NSObject {
     private(set) var transitionStyle: TransitionStyle = .pageCurl
     private(set) var navigationOrientation: NavigationOrientation = .horizontal
     private(set) var theme: Theme = .paleMint
-    private(set) var brightness: CGFloat = UIScreen.main.brightness
+    private(set) var brightness: CGFloat = 0.5
     private(set) var font: UIFont = .pingfangSC(ofSize: 16.0)
-    
     /// UserDefaults
     private lazy var userDefaults: UserDefaults = {
         let _obj: UserDefaults
@@ -68,7 +67,7 @@ final public class Configuration: NSObject {
         if let newValue = userDefaults.object(forKey: UserDefaultsKey.brightness.rawValue) as? CGFloat {
             self.brightness = newValue
         } else {
-            self.brightness = UIApplication.shared.hub.keyWindow?.screen.brightness ?? 0.5
+            self.brightness = UIApplication.shared.hub.brightness
         }
         if let fontText: String = userDefaults.string(forKey: UserDefaultsKey.font.rawValue) {
             let cmpts: Array<String> = fontText.components(separatedBy: "<|>")

@@ -77,7 +77,7 @@ class MenuViewController: UINavigationController {
     internal func showMenuWith(_ menuType: MenuType) {
         switch menuType {
         case .chapter:
-            let controller: ChapterViewController = .init(forWhat: fileURL, configuration: configuration)
+            let controller: SegmentedViewController = .init(forWhat: fileURL, configuration: configuration)
             showWith(controller)
         case .progress:
             let controller: ProgressViewController = .init(forWhat: fileURL, configuration: configuration)
@@ -133,7 +133,7 @@ extension MenuViewController: UINavigationControllerDelegate {
 }
 
 //  MARK: -  ProgressViewControllerDelegate, ConfigureViewControllerDelegate
-extension MenuViewController: @preconcurrency ProgressViewControllerDelegate, @preconcurrency ConfigureViewControllerDelegate {
+extension MenuViewController: ProgressViewControllerDelegate, ConfigureViewControllerDelegate {
     
     /// backwardActionWith
     /// - Parameters:

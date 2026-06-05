@@ -15,7 +15,7 @@ public typealias SpineLocation = UIPageViewController.SpineLocation
 /// UIPageViewController.OptionsKey
 public typealias OptionsKey = UIPageViewController.OptionsKey
 
-extension TransitionStyle: CaseIterable, CustomStringConvertible {
+extension TransitionStyle: @retroactive CaseIterable, @retroactive CustomStringConvertible {
     
     /// [UIPageViewController.TransitionStyle]
     public static var allCases: [UIPageViewController.TransitionStyle] {

@@ -38,7 +38,7 @@ protocol ConfigureViewControllerDelegate: AnyObject {
 }
 
 /// ConfigureViewController
-class ConfigureViewController: UIViewController, MenuContentViewController {
+class ConfigureViewController: UIViewController, MenuContentController {
     
     //  MARK: - 公开属性
     
@@ -88,6 +88,11 @@ class ConfigureViewController: UIViewController, MenuContentViewController {
         //_sliderView.trackValues = Array(0...10).map { Float($0) / 10.0 }
         _sliderView.delegate = self
         _sliderView.value = Float(configuration.brightness)
+        _sliderView.minimumValueImage = .module(named: "ic_brightness_min")
+        _sliderView.minimumValueImageTintColor = configuration.theme.primaryTint
+        _sliderView.maximumValueImage = .module(named: "ic_brightness_max")
+        _sliderView.maximumValueImageTintColor = configuration.theme.primaryTint
+        _sliderView.edgeInsets = .init(top: 0.0, left: 10.0, bottom: 0.0, right: 10.0)
         return _sliderView
     }()
     
@@ -119,8 +124,8 @@ class ConfigureViewController: UIViewController, MenuContentViewController {
         _sliderView.maximumValueText = "A+"
         _sliderView.minimumValueTextFont = .systemFont(ofSize: 14.0)
         _sliderView.maximumValueTextFont = .systemFont(ofSize: 14.0)
-        _sliderView.minimumValueTextColor = configuration.theme.primaryTint
-        _sliderView.maximumValueTextColor = configuration.theme.primaryTint
+        _sliderView.minimumValueTextColor = configuration.theme.placeholderTint
+        _sliderView.maximumValueTextColor = configuration.theme.placeholderTint
         _sliderView.thumbTextColor = configuration.theme.primaryTint
         _sliderView.thumbTextFont = .systemFont(ofSize: 14.0, weight: .medium)
         _sliderView.thumbTintColor = configuration.theme.thumbTintColor
@@ -268,6 +273,8 @@ class ConfigureViewController: UIViewController, MenuContentViewController {
         brightView.thumbTextColor = theme.primaryTint
         brightView.thumbTintColor = theme.thumbTintColor
         brightView.value = Float(configuration.brightness)
+        brightView.minimumValueImageTintColor = theme.primaryTint
+        brightView.maximumValueImageTintColor = theme.primaryTint
         
         fontLabel.textColor = theme.primaryTint
         fontView.backgroundColor = .clear
@@ -401,7 +408,7 @@ extension ConfigureViewController {
 }
 
 //  MARK: - UISliderViewDelegate
-extension ConfigureViewController: @preconcurrency UISliderViewDelegate {
+extension ConfigureViewController: UISliderViewDelegate {
     
     /// trackValueAction
     /// - Parameters:

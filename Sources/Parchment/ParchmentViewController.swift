@@ -152,6 +152,9 @@ final public class ParchmentViewController: UINavigationController {
         // NotificationCenter.default.addObserver(self, selector: #selector(notificaitonHandler(_:)), name: UIScreen.brightnessDidChangeNotification, object: .none)
         brightness = keyWindow?.screen.brightness ?? 0.5
         keyWindow?.screen.brightness = configuration.brightness
+        
+        // safeAreaInsets
+        //print("safeAreaInsets =>", UIApplication.shared.hub.safeAreaInsets)
     }
 
     deinit {
@@ -246,8 +249,9 @@ extension ParchmentViewController {
     /// - Parameter sender: UITapGestureRecognizer
     @objc private func tapActionHandler(_ sender: UITapGestureRecognizer) {
         // 过滤
-        if let topViewController = menuController.topViewController as? MenuContentViewController {
-            let location = sender.location(in: view)
+        let location = sender.location(in: view)
+        guard location.y > navigationBar.frame.maxY && location.y < toolbar.frame.minY else { return }
+        if let topViewController = menuController.topViewController as? MenuContentController {
             if topViewController.contentView.frame.contains(location) == true {
                 return
             }

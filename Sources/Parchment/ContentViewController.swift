@@ -14,6 +14,14 @@ class ContentViewController: UIViewController {
     
     //  MARK: - 私有属性
     
+    /// UIView
+    private lazy var contentView: UIView = {
+        let _contentView: UIView = .init(frame: .zero)
+        _contentView.backgroundColor = .random
+        _contentView.translatesAutoresizingMaskIntoConstraints = false
+        return _contentView
+    }()
+    
     /// String
     private let newText: String
     
@@ -61,6 +69,14 @@ extension ContentViewController {
     /// 初始化
     private func initialize() {
         view.backgroundColor = configuration.theme.background
+        
+        view.addSubview(contentView)
+        NSLayoutConstraint.activate([
+            contentView.leftAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leftAnchor),
+            contentView.rightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.rightAnchor),
+            contentView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            contentView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+        ])
     }
 }
 

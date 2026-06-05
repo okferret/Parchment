@@ -53,6 +53,11 @@ class UISliderView: UISlider {
     /// Optional<UISliderViewDelegate>
     internal weak var delegate: Optional<UISliderViewDelegate> = .none
     
+    /// UIEdgeInsets
+    internal var edgeInsets: UIEdgeInsets = .init(top: 0.0, left: 10.0, bottom: 0.0, right: 10.0) {
+        didSet { setNeedsUpdateConstraints() }
+    }
+    
     /// Optional<UIColor>
     internal override var maximumTrackTintColor: Optional<UIColor> {
         get { maxTrackView.backgroundColor }
@@ -79,7 +84,7 @@ class UISliderView: UISlider {
         get { maximumValueLabel.text }
         set {
             maximumValueLabel.text = newValue
-            maximumValueLabel.isHidden = (newValue == .none || newValue?.isEmpty == true || minimumValueImage != .none)
+            maximumValueLabel.isHidden = (newValue == .none || newValue?.isEmpty == true || maximumValueImage != .none)
         }
     }
     
@@ -130,15 +135,26 @@ class UISliderView: UISlider {
         }
     }
     
+    /// UIColor
+    internal var minimumValueImageTintColor: UIColor {
+        get { minimumValueImageView.tintColor }
+        set { minimumValueImageView.tintColor = newValue }
+    }
+    
     /// Optional<UIImage>
     internal override var maximumValueImage: Optional<UIImage> {
-        get { maximumValueImagView.image }
+        get { maximumValueImageView.image }
         set {
-            maximumValueImagView.image = newValue
-            maximumValueImagView.sizeToFit()
-            maximumValueImagView.isHidden = newValue == .none
+            maximumValueImageView.image = newValue
+            maximumValueImageView.sizeToFit()
+            maximumValueImageView.isHidden = newValue == .none
             maximumValueLabel.isHidden = newValue != .none
         }
+    }
+    /// UIColor
+    internal var maximumValueImageTintColor: UIColor {
+        get { maximumValueImageView.tintColor }
+        set { maximumValueImageView.tintColor = newValue }
     }
     
     //  MARK: - 私有属性
@@ -152,7 +168,7 @@ class UISliderView: UISlider {
     }()
     
     /// UIImageView
-    private lazy var maximumValueImagView: UIImageView = {
+    private lazy var maximumValueImageView: UIImageView = {
         let _imgView: UIImageView = .init(frame: .zero)
         _imgView.translatesAutoresizingMaskIntoConstraints = false
         _imgView.isHidden = true
@@ -262,7 +278,7 @@ class UISliderView: UISlider {
     ///   - value: Float
     /// - Returns: CGRect
     internal override func thumbRect(forBounds bounds: CGRect, trackRect rect: CGRect, value: Float) -> CGRect {
-        var thumbRect: CGRect = super.thumbRect(forBounds: bounds, trackRect: rect, value: value)
+        let thumbRect: CGRect = super.thumbRect(forBounds: bounds, trackRect: rect, value: value)
         if let widthAnchor = minTrackView.constraints.first(where: { $0.firstAttribute == .width }) {
             if value == 0.0 {
                 widthAnchor.constant = 0.0
@@ -292,6 +308,23 @@ class UISliderView: UISlider {
         /// bringSubviewToFront
         bringSubviewToFront(thumbTextLabel)
     }
+    
+    /// updateConstraints
+    internal override func updateConstraints() {
+        defer { super.updateConstraints() }
+        if let leftAnchor = constraints.first(where: { $0.hub.firstItem() == minimumValueLabel && $0.firstAttribute == .left }) {
+            leftAnchor.constant = edgeInsets.left
+        }
+        if let leftAnchor = constraints.first(where: { $0.hub.firstItem() == minimumValueImageView && $0.firstAttribute == .left }) {
+            leftAnchor.constant = edgeInsets.left
+        }
+        if let rightAnchor = constraints.first(where: { $0.hub.firstItem() == maximumValueLabel && $0.firstAttribute == .right }) {
+            rightAnchor.constant = -edgeInsets.right
+        }
+        if let rightAnchor = constraints.first(where: { $0.hub.firstItem() == maximumValueImageView && $0.firstAttribute == .right }) {
+            rightAnchor.constant = -edgeInsets.right
+        }
+    }
 }
 
 extension UISliderView {
@@ -316,37 +349,34 @@ extension UISliderView {
         
         insertSubview(minimumValueLabel, aboveSubview: minTrackView)
         NSLayoutConstraint.activate([
-            minimumValueLabel.leftAnchor.constraint(equalTo: leftAnchor, constant: 12.0),
+            minimumValueLabel.leftAnchor.constraint(equalTo: leftAnchor, constant: edgeInsets.left),
             minimumValueLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
         
         insertSubview(maximumValueLabel, aboveSubview: minTrackView)
         NSLayoutConstraint.activate([
-            maximumValueLabel.rightAnchor.constraint(equalTo: rightAnchor, constant: -12.0),
+            maximumValueLabel.rightAnchor.constraint(equalTo: rightAnchor, constant: -edgeInsets.right),
             maximumValueLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
         
         insertSubview(minimumValueImageView, aboveSubview: minimumValueLabel)
         NSLayoutConstraint.activate([
-            minimumValueImageView.leftAnchor.constraint(equalTo: leftAnchor, constant: 12.0),
+            minimumValueImageView.leftAnchor.constraint(equalTo: leftAnchor, constant: edgeInsets.left),
             minimumValueImageView.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
         
-        insertSubview(maximumValueImagView, aboveSubview: maximumValueLabel)
+        insertSubview(maximumValueImageView, aboveSubview: maximumValueLabel)
         NSLayoutConstraint.activate([
-            maximumValueImagView.rightAnchor.constraint(equalTo: rightAnchor, constant: -12.0),
-            maximumValueImagView.centerYAnchor.constraint(equalTo: centerYAnchor)
+            maximumValueImageView.rightAnchor.constraint(equalTo: rightAnchor, constant: -edgeInsets.right),
+            maximumValueImageView.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
         
         addSubview(thumbTextLabel)
-        
     }
     
     /// trackActionHandler
     /// - Parameter sender: UISliderView
     @objc private func trackActionHandler(_ sender: UISliderView) {
-        willChangeValue(forKey: #keyPath(UISliderView.value))
-        defer { didChangeValue(forKey: #keyPath(UISliderView.value)) }
         // next
         if isTrackValues == true && trackValues.isEmpty == false {
             if trackValues.contains(sender.value) == true {

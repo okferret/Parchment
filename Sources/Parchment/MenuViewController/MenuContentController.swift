@@ -1,5 +1,5 @@
 //
-//  MenuContentViewController.swift
+//  MenuContentView.swift
 //  Parchment
 //
 //  Created by okferret on 2026/6/3.
@@ -9,8 +9,8 @@
 
 import UIKit
 
-/// MenuContentViewController
-protocol MenuContentViewController: UIViewController {
+/// MenuContentController
+protocol MenuContentController: UIViewController {
     
     /// UIView
     var contentView: UIView { get }

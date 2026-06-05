@@ -1,19 +1,14 @@
 //
-//  ChapterTableViewCell.swift
+//  BookmarkViewCell.swift
 //  Parchment
 //
-//  Created by okferret on 2026/6/4.
+//  Created by okferret on 2026/6/5.
 //
-
 #if canImport(UIKit)
 
 import UIKit
 
-/// ChapterTableViewCell
-class ChapterTableViewCell: UITableViewCell {
-    
-    /// ChapterTableViewCell
-    internal static var reusedID: String { "ChapterTableViewCell" }
+class BookmarkViewCell: UITableViewCell {
 
     override func awakeFromNib() {
         super.awakeFromNib()

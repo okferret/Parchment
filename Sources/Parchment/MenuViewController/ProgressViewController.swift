@@ -31,7 +31,7 @@ protocol ProgressViewControllerDelegate: AnyObject {
     func controller(_ controller: ProgressViewController, progressActionWtih value: Float)
 }
 
-class ProgressViewController: UIViewController, MenuContentViewController {
+class ProgressViewController: UIViewController, MenuContentController {
     
     //  MARK: - 公开属性
     
@@ -113,9 +113,6 @@ class ProgressViewController: UIViewController, MenuContentViewController {
         return _stackView
     }()
     
-    /// Optional<NSKeyValueObservation>
-    private var observation: Optional<NSKeyValueObservation> = .none
-    
     /// 文件存储位置
     private let fileURL: URL
     /// Configuration
@@ -145,13 +142,6 @@ class ProgressViewController: UIViewController, MenuContentViewController {
         // Do any additional setup after loading the view.
         // 初始化
         initialize()
-        // KVO
-        observation = sliderView.observe(\.value, options: [.initial, .new], changeHandler: {[weak self] _, obs in
-            guard let this = self, let newValue: Float = obs.newValue else { return }
-            this.leftButton.isEnabled = newValue > 0.0
-            this.rightButton.isEnabled = newValue < 1.0
-            print("observation =>", obs.newValue)
-        })
     }
     
     /// traitCollectionDidChange
@@ -219,7 +209,7 @@ extension ProgressViewController {
 }
 
 //  MARK: - UISliderViewDelegate
-extension ProgressViewController: @preconcurrency UISliderViewDelegate {
+extension ProgressViewController: UISliderViewDelegate {
     
     /// trackValueAction
     /// - Parameters:
@@ -235,6 +225,8 @@ extension ProgressViewController: @preconcurrency UISliderViewDelegate {
     ///   - slideValue: Float
     internal func sliderView(_ sliderView: UISliderView, slideAction slideValue: Float) {
         progressLabel.text = "阅读进度：\(NumberFormatter.default.hub.string(from: slideValue, numberStyle: .percent))"
+        leftButton.isEnabled = slideValue > 0.0
+        rightButton.isEnabled = slideValue < 1.0
     }
     
 }

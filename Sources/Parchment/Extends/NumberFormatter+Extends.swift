@@ -34,13 +34,13 @@ extension CompatibleWrapper where Base: NumberFormatter {
     /// - Returns: String
     internal func string(from newValue: NSNumber,
                          local: Locale = .autoupdatingCurrent,
-                         minimumFractionDigits: Int = 1,
+                         minimumFractionDigits: Int = 0,
                          maximumFractionDigits: Int = 2,
                          numberStyle: NumberFormatter.Style = .percent) -> String {
-        base.locale = .autoupdatingCurrent
-        base.minimumFractionDigits = 1
-        base.maximumFractionDigits = 2
-        base.numberStyle = .percent
+        base.locale = local
+        base.minimumFractionDigits = minimumFractionDigits
+        base.maximumFractionDigits = maximumFractionDigits
+        base.numberStyle = numberStyle
         return base.string(from: newValue) ?? ""
     }
     
@@ -54,7 +54,7 @@ extension CompatibleWrapper where Base: NumberFormatter {
     /// - Returns: String
     internal func string(from newValue: Float,
                          local: Locale = .autoupdatingCurrent,
-                         minimumFractionDigits: Int = 1,
+                         minimumFractionDigits: Int = 0,
                          maximumFractionDigits: Int = 2,
                          numberStyle: NumberFormatter.Style = .percent) -> String {
         return base.hub.string(from: .init(value: newValue),
@@ -74,7 +74,7 @@ extension CompatibleWrapper where Base: NumberFormatter {
     /// - Returns: String
     internal func string(from newValue: CGFloat,
                          local: Locale = .autoupdatingCurrent,
-                         minimumFractionDigits: Int = 1,
+                         minimumFractionDigits: Int = 0,
                          maximumFractionDigits: Int = 2,
                          numberStyle: NumberFormatter.Style = .percent) -> String {
         return base.hub.string(from: .init(value: newValue),
@@ -94,7 +94,7 @@ extension CompatibleWrapper where Base: NumberFormatter {
     /// - Returns: String
     internal func string(from newValue: Double,
                          local: Locale = .autoupdatingCurrent,
-                         minimumFractionDigits: Int = 1,
+                         minimumFractionDigits: Int = 0,
                          maximumFractionDigits: Int = 2,
                          numberStyle: NumberFormatter.Style = .percent) -> String {
         return base.hub.string(from: .init(value: newValue),
@@ -114,7 +114,7 @@ extension CompatibleWrapper where Base: NumberFormatter {
     /// - Returns: String
     internal func string(from newValue: Int,
                          local: Locale = .autoupdatingCurrent,
-                         minimumFractionDigits: Int = 1,
+                         minimumFractionDigits: Int = 0,
                          maximumFractionDigits: Int = 2,
                          numberStyle: NumberFormatter.Style = .percent) -> String {
         return base.hub.string(from: .init(value: newValue),

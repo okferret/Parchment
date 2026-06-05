@@ -56,7 +56,7 @@ class MenuTransitionAnimator: NSObject , UIViewControllerAnimatedTransitioning {
         
         switch transitionType {
         case .push:
-            guard let toVC = toVC as? MenuContentViewController else {
+            guard let toVC = toVC as? MenuContentController else {
                 transitionContext.completeTransition(false)
                 return
             }
@@ -69,7 +69,7 @@ class MenuTransitionAnimator: NSObject , UIViewControllerAnimatedTransitioning {
             
             UIView.animate(withDuration: duration, delay: 0, options: [.curveEaseOut], animations: {
                 toVC.contentView.frame = newFrame
-                if let fromVC = fromVC as? MenuContentViewController {
+                if let fromVC = fromVC as? MenuContentController {
                     fromVC.contentView.frame.origin.y = newFrame.minY
                 }
             }) { finished in
@@ -78,7 +78,7 @@ class MenuTransitionAnimator: NSObject , UIViewControllerAnimatedTransitioning {
             
         case .pop:
             // Pop: 向屏幕底部退出
-            guard let fromVC = fromVC as? MenuContentViewController else {
+            guard let fromVC = fromVC as? MenuContentController else {
                 transitionContext.completeTransition(false)
                 return
             }

@@ -1,14 +1,13 @@
 //
-//  ChapterViewController.swift
+//  BookmarkViewController.swift
 //  Parchment
 //
 //  Created by okferret on 2026/6/5.
 //
 #if canImport(UIKit)
-
 import UIKit
 
-class ChapterViewController: UIViewController {
+class BookmarkViewController: UIViewController {
     
     //  MARK: - 私有属性
     
@@ -66,7 +65,7 @@ class ChapterViewController: UIViewController {
     }
 }
 
-extension ChapterViewController {
+extension BookmarkViewController {
     
     /// 初始化
     private func initialize() {
@@ -82,5 +81,4 @@ extension ChapterViewController {
         ])
     }
 }
-
 #endif

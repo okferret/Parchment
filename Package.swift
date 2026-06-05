@@ -38,5 +38,5 @@ let package = Package(
             dependencies: ["Parchment"]
         ),
     ],
-    swiftLanguageModes: [.v6]
+    swiftLanguageModes: [.v5]
 )
