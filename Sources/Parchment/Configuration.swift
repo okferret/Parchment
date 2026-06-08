@@ -33,6 +33,11 @@ final public class Configuration: NSObject {
     private(set) var theme: Theme = .paleMint
     private(set) var brightness: CGFloat = 0.5
     private(set) var font: UIFont = .pingfangSC(ofSize: 16.0)
+    internal var textAttributes: Dictionary<NSAttributedString.Key, Any> {
+        let paragraphStyle: NSMutableParagraphStyle = .init()
+        paragraphStyle.firstLineHeadIndent = "汉字".hub.width(with: font)
+        return [.font: font, .foregroundColor: theme.primaryText, .paragraphStyle: paragraphStyle]
+    }
     /// UserDefaults
     private lazy var userDefaults: UserDefaults = {
         let _obj: UserDefaults
@@ -141,6 +146,25 @@ extension Configuration {
     public static func current() -> Configuration {
         return .init()
     }
+    
+    /// URL
+    public static let dirURL: URL = {
+        let dirURL: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let newURL: URL
+        if #available(iOS 16.0, *) {
+            newURL = dirURL.appending(path: "Parchment/Books", directoryHint: .isDirectory)
+        } else {
+            newURL = dirURL.appendingPathComponent("Parchment/Books", isDirectory: true)
+        }
+        var isDir: ObjCBool = .init(false)
+        if FileManager.default.fileExists(atPath: newURL.path, isDirectory: &isDir) == true && isDir.boolValue == false {
+            return newURL
+        } else {
+            try? FileManager.default.removeItem(at: newURL)
+            try? FileManager.default.createDirectory(at: newURL, withIntermediateDirectories: true)
+            return newURL
+        }
+    }()
 }
 
 /// Theme
@@ -149,8 +173,10 @@ struct Theme: Hashable {
     internal let background: UIColor
     internal let barTint: UIColor
     internal let stressTint: UIColor
+    internal let markedTint: UIColor
     internal let primaryTint: UIColor
     internal let primaryText: UIColor
+    internal let separatorTint: UIColor
     internal let indicator: UIColor
     internal let segmentBackground: UIColor
     internal let segmentTint: UIColor
@@ -196,8 +222,10 @@ extension Theme: CaseIterable {
                      background:        .hex("#D5E3D3"),
                      barTint:           .hex("#E6EFE5"),
                      stressTint:        .hex("#54904F"),
+                     markedTint:         .hex("#54904E"),
                      primaryTint:       .hex("#333333"),
                      primaryText:       .hex("#333333"),
+                     separatorTint:     .hex("#CAD7C8"),
                      indicator:         .hex("#BFCBBD"),
                      segmentBackground: .hex("#CAD7C8"),
                      segmentTint:       .hex("#E6EFE5"),
@@ -214,8 +242,10 @@ extension Theme: CaseIterable {
                      background:        .hex("#CED8E2"),
                      barTint:           .hex("#E0EBF7"),
                      stressTint:        .hex("#567CA2"),
+                     markedTint:         .hex("#54904E"),
                      primaryTint:       .hex("#333333"),
                      primaryText:       .hex("#333333"),
+                     separatorTint:     .hex("#C3CCD6"),
                      indicator:         .hex("#B9C1CA"),
                      segmentBackground: .hex("#C3CCD6"),
                      segmentTint:       .hex("#E0EBF7"),
@@ -232,8 +262,10 @@ extension Theme: CaseIterable {
                      background:        .hex("#F6F6F6"),
                      barTint:           .hex("#FEFEFE"),
                      stressTint:        .hex("#3D82F2"),
+                     markedTint:         .hex("#54904E"),
                      primaryTint:       .hex("#333333"),
                      primaryText:       .hex("#333333"),
+                     separatorTint:     .hex("#E9E9E9"),
                      indicator:         .hex("#DCDCDC"),
                      segmentBackground: .hex("#E9E9E9"),
                      segmentTint:       .hex("#FFFFFF"),
@@ -250,8 +282,10 @@ extension Theme: CaseIterable {
                      background:        .hex("#F7F0E6"),
                      barTint:           .hex("#FFFCF8"),
                      stressTint:        .hex("#C59F69"),
+                     markedTint:         .hex("#54904E"),
                      primaryTint:       .hex("#333333"),
                      primaryText:       .hex("#333333"),
+                     separatorTint:     .hex("#EAE3DA"),
                      indicator:         .hex("#DDD7CE"),
                      segmentBackground: .hex("#EAE3DA"),
                      segmentTint:       .hex("#FFFCF8"),
@@ -268,8 +302,10 @@ extension Theme: CaseIterable {
                      background:        .hex("#11111"),
                      barTint:           .hex("#222222"),
                      stressTint:        .hex("#3D82F2"),
+                     markedTint:         .hex("#54904E"),
                      primaryTint:       .hex("#CCCCCC"),
                      primaryText:       .hex("#CCCCCC"),
+                     separatorTint:     .hex("#333333"),
                      indicator:         .hex("#666666"),
                      segmentBackground: .hex("#333333"),
                      segmentTint:       .hex("#222222"),

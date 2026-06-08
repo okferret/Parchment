@@ -39,8 +39,8 @@ class MenuViewController: UINavigationController {
     
     //  MARK: - 私有属性
     
-    /// URL
-    private let fileURL: URL
+    ///  BookEntity.Want
+    private(set) var bookWant: Optional<BookEntity.Want>
     /// Configuration
     private let configuration: Configuration
     
@@ -48,10 +48,10 @@ class MenuViewController: UINavigationController {
     
     /// 构造函数
     /// - Parameters:
-    ///   - fileURL: URL
+    ///   - bookWant: Optional<BookEntity.Want>
     ///   - configuration: Configuration
-    internal init(forWhat fileURL: URL, configuration: Configuration) {
-        self.fileURL = fileURL
+    internal init(forWhat bookWant: Optional<BookEntity.Want>, configuration: Configuration) {
+        self.bookWant = bookWant
         self.configuration = configuration
         super.init(rootViewController: UIViewController())
         self.isToolbarHidden = true
@@ -71,22 +71,34 @@ class MenuViewController: UINavigationController {
         // Do any additional setup after loading the view.
         view.backgroundColor = .black.withAlphaComponent(0.15)
     }
+    
+    /// reloadWith
+    /// - Parameter bookWant: BookEntity.Want
+    internal func reloadWith(_ bookWant: BookEntity.Want) {
+        self.bookWant = bookWant
+    }
 
     /// 展示菜单
     /// - Parameter menuType: MenuType
     internal func showMenuWith(_ menuType: MenuType) {
         switch menuType {
         case .chapter:
-            let controller: SegmentedViewController = .init(forWhat: fileURL, configuration: configuration)
-            showWith(controller)
+            if let bookWant: BookEntity.Want = bookWant {
+                let controller: SegmentedViewController = .init(forWhat: bookWant, configuration: configuration)
+                showWith(controller)
+            }
         case .progress:
-            let controller: ProgressViewController = .init(forWhat: fileURL, configuration: configuration)
-            controller.delegate = self
-            showWith(controller)
+            if let bookWant: BookEntity.Want = bookWant {
+                let controller: ProgressViewController = .init(forWhat: bookWant, configuration: configuration)
+                controller.delegate = self
+                showWith(controller)
+            }
         case .other:
-            let controller: ConfigureViewController = .init(forWhat: fileURL, configuration: configuration)
-            controller.delegate = self
-            showWith(controller)
+            if let bookWant: BookEntity.Want = bookWant {
+                let controller: ConfigureViewController = .init(forWhat: bookWant, configuration: configuration)
+                controller.delegate = self
+                showWith(controller)
+            }
         }
     }
     

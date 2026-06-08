@@ -25,8 +25,8 @@ class BookmarkViewController: UIViewController {
         return _tableView
     }()
     
-    /// URL
-    private let fileURL: URL
+    /// BookEntity.Want
+    private let bookWant: BookEntity.Want
     
     /// Configuration
     private let configuration: Configuration
@@ -35,10 +35,10 @@ class BookmarkViewController: UIViewController {
     
     /// 构造函数
     /// - Parameters:
-    ///   - fileURL: URL
+    ///   - bookWant: BookEntity.Want
     ///   - configuration: Configuration
-    internal init(forWhat fileURL: URL, configuration: Configuration) {
-        self.fileURL = fileURL
+    internal init(forWhat bookWant: BookEntity.Want, configuration: Configuration) {
+        self.bookWant = bookWant
         self.configuration = configuration
         super.init(nibName: .none, bundle: .none)
     }

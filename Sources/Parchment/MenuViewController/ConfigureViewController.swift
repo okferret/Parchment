@@ -92,7 +92,7 @@ class ConfigureViewController: UIViewController, MenuContentController {
         _sliderView.minimumValueImageTintColor = configuration.theme.primaryTint
         _sliderView.maximumValueImage = .module(named: "ic_brightness_max")
         _sliderView.maximumValueImageTintColor = configuration.theme.primaryTint
-        _sliderView.edgeInsets = .init(top: 0.0, left: 10.0, bottom: 0.0, right: 10.0)
+        _sliderView.edgeInsets = .init(top: 0.0, left: 8.0, bottom: 0.0, right: 8.0)
         return _sliderView
     }()
     
@@ -225,8 +225,8 @@ class ConfigureViewController: UIViewController, MenuContentController {
         return _stackView
     }()
     
-    /// 文件存储位置
-    private let fileURL: URL
+    /// BookEntity.Want
+    private let bookWant: BookEntity.Want
     /// Configuration
     private let configuration: Configuration
     
@@ -234,10 +234,10 @@ class ConfigureViewController: UIViewController, MenuContentController {
     
     /// g构造函数
     /// - Parameters:
-    ///   - fileURL: URL
+    ///   - bookWant: BookEntity.Want
     ///   - configuration: Configuration
-    internal init(forWhat fileURL: URL, configuration: Configuration) {
-        self.fileURL = fileURL
+    internal init(forWhat bookWant: BookEntity.Want, configuration: Configuration) {
+        self.bookWant = bookWant
         self.configuration = configuration
         super.init(nibName: .none, bundle: .none)
         self.modalPresentationStyle = .currentContext

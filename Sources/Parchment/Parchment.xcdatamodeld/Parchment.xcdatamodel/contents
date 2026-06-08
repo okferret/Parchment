@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24901" systemVersion="25F80" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
-    <entity name="BookEntity" representedClassName="BookEntity" syncable="YES" codeGenerationType="class"/>
-    <entity name="ChapterEntity" representedClassName="ChapterEntity" syncable="YES" codeGenerationType="class"/>
-    <entity name="PageEntity" representedClassName="PageEntity" syncable="YES" codeGenerationType="class"/>
-</model>

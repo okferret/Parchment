@@ -77,12 +77,15 @@ final public class ParchmentViewController: UINavigationController {
     
     /// 菜单控制器
     private lazy var menuController: MenuViewController = {
-        let _controller: MenuViewController = .init(forWhat: fileURL, configuration: configuration)
+        let _controller: MenuViewController = .init(forWhat: .none, configuration: configuration)
         _controller.view.backgroundColor = .black.withAlphaComponent(0.15)
         _controller.additionalSafeAreaInsets = .init(top: 0.0, left: 0.0, bottom: toolbar.bounds.height, right: 0.0)
         _controller.menuDelegate = self
         return _controller
     }()
+    
+    /// Optional<BookEntity.Want>
+    private var bookWant: Optional<BookEntity.Want> = .none
     
     /// 文件存储位置
     private let fileURL: URL
@@ -152,9 +155,8 @@ final public class ParchmentViewController: UINavigationController {
         // NotificationCenter.default.addObserver(self, selector: #selector(notificaitonHandler(_:)), name: UIScreen.brightnessDidChangeNotification, object: .none)
         brightness = keyWindow?.screen.brightness ?? 0.5
         keyWindow?.screen.brightness = configuration.brightness
-        
-        // safeAreaInsets
-        //print("safeAreaInsets =>", UIApplication.shared.hub.safeAreaInsets)
+        // 解析数据
+        parseWith(fileURL)
     }
 
     deinit {
@@ -183,6 +185,24 @@ extension ParchmentViewController {
             menuController.view.topAnchor.constraint(equalTo: view.topAnchor),
             menuController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+    }
+    
+    /// parseWith
+    /// - Parameter fileURL: URL
+    private func parseWith(_ fileURL: URL) {
+        Task(priority: .userInitiated) {
+            do {
+                let newWant: BookEntity.Want = try BookParser.parseWith(fileURL)
+                self.bookWant = newWant
+                menuController.reloadWith(newWant)
+            } catch {
+                let controller: UIAlertController = .init(title: "操作提醒", message: error.localizedDescription, preferredStyle: .alert)
+                controller.addAction(.init(title: "关闭", style: .default, handler: { _ in
+                    self.dismiss(animated: true, completion: .none)
+                }))
+                present(controller, animated: true, completion: .none)
+            }
+        }
     }
     
     /// itemActionHandler

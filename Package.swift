@@ -30,7 +30,8 @@ let package = Package(
                 .product(name: "Uchardet", package: "Uchardet"),
             ],
             resources: [
-                .process("Assets.xcassets")
+                .process("Assets.xcassets"),
+                .process("BookHelper/Parchment.xcdatamodeld")
             ]
         ),
         .testTarget(

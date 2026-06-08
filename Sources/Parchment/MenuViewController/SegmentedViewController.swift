@@ -46,14 +46,14 @@ class SegmentedViewController: UIViewController, MenuContentController {
     
     /// 章节
     private lazy var chapter: ChapterViewController = {
-        let _controller: ChapterViewController = .init(forWhat: fileURL, configuration: configuration)
+        let _controller: ChapterViewController = .init(forWhat: bookWant, configuration: configuration)
         _controller.view.translatesAutoresizingMaskIntoConstraints = false
         return _controller
     }()
 
     /// 书签
     private lazy var bookmark: BookmarkViewController = {
-        let _controller: BookmarkViewController = .init(forWhat: fileURL, configuration: configuration)
+        let _controller: BookmarkViewController = .init(forWhat: bookWant, configuration: configuration)
         _controller.view.isHidden = true
         _controller.view.translatesAutoresizingMaskIntoConstraints = false
         return _controller
@@ -61,8 +61,8 @@ class SegmentedViewController: UIViewController, MenuContentController {
     
     
     
-    /// URL
-    private let fileURL: URL
+    /// BookEntity.Want
+    private let bookWant: BookEntity.Want
     
     /// Configuration
     private let configuration: Configuration
@@ -71,10 +71,10 @@ class SegmentedViewController: UIViewController, MenuContentController {
     
     /// 构造函数
     /// - Parameters:
-    ///   - fileURL: URL
+    ///   - bookWant: BookEntity.Want
     ///   - configuation: Configuration
-    internal init(forWhat fileURL: URL, configuration: Configuration) {
-        self.fileURL = fileURL
+    internal init(forWhat bookWant: BookEntity.Want, configuration: Configuration) {
+        self.bookWant = bookWant
         self.configuration = configuration
         super.init(nibName: .none, bundle: .none)
     }

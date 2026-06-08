@@ -113,8 +113,8 @@ class ProgressViewController: UIViewController, MenuContentController {
         return _stackView
     }()
     
-    /// 文件存储位置
-    private let fileURL: URL
+    /// BookEntity.Want
+    private let bookWant: BookEntity.Want
     /// Configuration
     private let configuration: Configuration
     
@@ -122,10 +122,10 @@ class ProgressViewController: UIViewController, MenuContentController {
     
     /// g构造函数
     /// - Parameters:
-    ///   - fileURL: URL
+    ///   - bookWant: BookEntity.Want
     ///   - configuration: Configuration
-    internal init(forWhat fileURL: URL, configuration: Configuration) {
-        self.fileURL = fileURL
+    internal init(forWhat bookWant: BookEntity.Want, configuration: Configuration) {
+        self.bookWant = bookWant
         self.configuration = configuration
         super.init(nibName: .none, bundle: .none)
     }
