@@ -35,7 +35,7 @@ final public class Configuration: NSObject {
     private(set) var font: UIFont = .pingfangSC(ofSize: 16.0)
     internal var textAttributes: Dictionary<NSAttributedString.Key, Any> {
         let paragraphStyle: NSMutableParagraphStyle = .init()
-        paragraphStyle.firstLineHeadIndent = "汉字".hub.width(with: font)
+        paragraphStyle.firstLineHeadIndent = "缩进".hub.width(with: font)
         return [.font: font, .foregroundColor: theme.primaryText, .paragraphStyle: paragraphStyle]
     }
     /// UserDefaults

@@ -90,6 +90,7 @@ final public class ParchmentViewController: UINavigationController {
     private lazy var loadingView: UIActivityIndicatorView = {
         let _loadingView: UIActivityIndicatorView = .init(style: .medium)
         _loadingView.hidesWhenStopped = true
+        _loadingView.translatesAutoresizingMaskIntoConstraints = false
         return _loadingView
     }()
     
@@ -108,7 +109,7 @@ final public class ParchmentViewController: UINavigationController {
     private var keyWindow: Optional<UIWindow> {
         return (view.window ?? UIApplication.shared.hub.keyWindow)
     }
-    
+  
     //  MARK: - 生命周期
     
     /// 构造函数
@@ -144,7 +145,7 @@ final public class ParchmentViewController: UINavigationController {
         controller.toolbarItems = barItemArray
         controller.delegate = self
         controller.dataSource = self
-        controller.setViewControllers([ContentViewController.init(forWhat: "", configuration: configuration)], direction: .forward, animated: false)
+        controller.setViewControllers([ContentViewController()], direction: .forward, animated: false)
         controller.view.backgroundColor = .clear
         self.setViewControllers([controller], animated: false)
     }
@@ -202,12 +203,20 @@ extension ParchmentViewController {
     /// parseWith
     /// - Parameter fileURL: URL
     private func parseWith(_ fileURL: URL) {
-        loadingView.startAnimating()
+        guard let keyWindow = UIApplication.shared.hub.keyWindow else { return }
+        let safeAreaInsets: UIEdgeInsets = BookHelper.safeAreaInsets
+        let safeArea: CGSize = keyWindow.bounds.inset(by: safeAreaInsets).size
         Task(priority: .userInitiated) {
-            do {
-                let newWant: BookEntity.Want = try BookParser.parseWith(fileURL)
-                bookWant = newWant
+            do {     
+                let newWant: BookEntity.Want = try await BookHelper.shared.parseWith(fileURL, safeArea: safeArea, textAttributes: configuration.textAttributes)
+                self.bookWant = newWant
                 menuController.reloadWith(newWant)
+                if let topViewController = topViewController as? UIPageViewController, let pageWant: PageEntity.Want = newWant.pageAt(.none) {
+                    let controller: ContentViewController = .init()
+                    controller.additionalSafeAreaInsets = .init(top: 0.0, left: safeAreaInsets.left, bottom: 0.0, right: safeAreaInsets.right)
+                    controller.reloadWith(pageWant, configuration: configuration)
+                    topViewController.setViewControllers([controller], direction: .forward, animated: false)
+                }
             } catch {
                 let controller: UIAlertController = .init(title: "操作提醒", message: error.localizedDescription, preferredStyle: .alert)
                 controller.addAction(.init(title: "关闭", style: .default, handler: { _ in
@@ -285,16 +294,52 @@ extension ParchmentViewController {
         // 过滤
         let location = sender.location(in: view)
         guard location.y > navigationBar.frame.maxY && location.y < toolbar.frame.minY else { return }
-        if let topViewController = menuController.topViewController as? MenuContentController {
-            if topViewController.contentView.frame.contains(location) == true {
-                return
+        if isToolbarHidden == false || isNavigationBarHidden == false {
+            if let topViewController = menuController.topViewController as? MenuContentController {
+                guard topViewController.contentView.frame.contains(location) == false else { return }
+                hideBarAction()
+            } else {
+                hideBarAction()
+            }
+        } else {
+            if let topViewController = menuController.topViewController as? MenuContentController {
+                guard topViewController.contentView.frame.contains(location) == false else { return }
+                hideBarAction()
+            } else {
+                // 分区域
+                let leftArea: CGRect = .init(x: 0.0, y: 0.0, width: floor(view.bounds.width / 3.0), height: view.bounds.height)
+                let midArea: CGRect = .init(x: leftArea.maxX, y: 0.0, width: leftArea.width, height: view.bounds.height)
+                let rightArea: CGRect = .init(x: midArea.maxX, y: 0.0, width: view.bounds.width - midArea.maxX, height: view.bounds.height)
+                // 根据区域划分功能
+                switch location {
+                case _ where midArea.contains(location) == true && (isToolbarHidden == true || isNavigationBarHidden == true):
+                    showBarAction()
+                    
+                case _ where leftArea.contains(location) == true:
+                    if let bookWant = bookWant {
+                        backwardActionWith(bookWant)
+                    }
+                    
+                case _ where rightArea.contains(location) == true:
+                    if let bookWant = bookWant {
+                        forewardActionWith(bookWant)
+                    }
+                default: break
+                }
             }
         }
-        if isToolbarHidden == true || isNavigationBarHidden == true {
-            showBarAction()
-        } else {
-            hideBarAction()
-        }
+    }
+    
+    /// forewardActionWith
+    /// - Parameter bookWant: BookEntity.Want
+    private func forewardActionWith(_ bookWant: BookEntity.Want) {
+        
+    }
+    
+    /// backwardActionWith
+    /// - Parameter bookWant: BookEntity.Want
+    private func backwardActionWith(_ bookWant: BookEntity.Want) {
+        
     }
     
     /// showBarAction
@@ -361,7 +406,16 @@ extension ParchmentViewController: UIPageViewControllerDelegate, UIPageViewContr
     /// - Returns: UIViewController
     public func pageViewController(_ pageViewController: UIPageViewController,
                                    viewControllerBefore viewController: UIViewController) -> UIViewController? {
-        return ContentViewController.init(forWhat: "", configuration: configuration)
+        guard let viewController = viewController as? ContentViewController,
+              let pageWant: PageEntity.Want = viewController.pageWant
+        else { return .none }
+        let newIndex: Int64 = pageWant.index - 1
+        guard let newWant: PageEntity.Want = bookWant?.pageAt(newIndex) else { return .none }
+        let safeAreaInsets: UIEdgeInsets = BookHelper.safeAreaInsets
+        let controller: ContentViewController = .init()
+        controller.additionalSafeAreaInsets = .init(top: 0.0, left: safeAreaInsets.left, bottom: 0.0, right: safeAreaInsets.right)
+        controller.reloadWith(newWant, configuration: configuration)
+        return controller
     }
     
     /// viewControllerAfter
@@ -371,7 +425,17 @@ extension ParchmentViewController: UIPageViewControllerDelegate, UIPageViewContr
     /// - Returns: UIPageViewController
     public func pageViewController(_ pageViewController: UIPageViewController,
                                    viewControllerAfter viewController: UIViewController) -> UIViewController? {
-        return ContentViewController.init(forWhat: "", configuration: configuration)
+        guard let viewController = viewController as? ContentViewController,
+              let bookWant = bookWant,
+              let pageWant: PageEntity.Want = viewController.pageWant
+        else { return .none }
+        let newIndex: Int64 = pageWant.index + 1
+        guard let newWant: PageEntity.Want = bookWant.pageAt(newIndex) else { return .none }
+        let safeAreaInsets: UIEdgeInsets = BookHelper.safeAreaInsets
+        let controller: ContentViewController = .init()
+        controller.additionalSafeAreaInsets = .init(top: 0.0, left: safeAreaInsets.left, bottom: 0.0, right: safeAreaInsets.right)
+        controller.reloadWith(newWant, configuration: configuration)
+        return controller
     }
     
     /// pageViewControllerSupportedInterfaceOrientations

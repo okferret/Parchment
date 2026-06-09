@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24901" systemVersion="25F80" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
     <entity name="BookEntity" representedClassName="BookEntity" syncable="YES">
+        <attribute name="currentIndex" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="encoding" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="filename" attributeType="String"/>
         <attribute name="relativePath" attributeType="String"/>
@@ -24,8 +25,11 @@
         <relationship name="book" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="BookEntity" inverseName="marks" inverseEntity="BookEntity"/>
     </entity>
     <entity name="PageEntity" representedClassName="PageEntity" syncable="YES">
+        <attribute name="index" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="isTruncated" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="length" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="offset" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sketchText" attributeType="String"/>
         <attribute name="text" attributeType="String"/>
         <relationship name="book" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="BookEntity" inverseName="pages" inverseEntity="BookEntity"/>
     </entity>

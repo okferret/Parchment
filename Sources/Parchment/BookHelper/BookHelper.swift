@@ -23,6 +23,16 @@ class BookHelper: NSObject {
         return container.viewContext
     }
     
+    /// UIEdgeInsets
+    internal static var safeAreaInsets: UIEdgeInsets {
+        guard let keyWindow = UIApplication.shared.hub.keyWindow else { return .zero }
+        let safeAreaInsets: UIEdgeInsets = .init(top:       max(keyWindow.safeAreaInsets.top, 32.0),
+                                                 left:      max(keyWindow.safeAreaInsets.left, 16.0),
+                                                 bottom:    max(keyWindow.safeAreaInsets.bottom, 32.0),
+                                                 right:     max(keyWindow.safeAreaInsets.right, 16.0))
+        return safeAreaInsets
+    }
+    
     //  MARK: - 私有属性
     
     /// NSPersistentContainer
@@ -34,6 +44,7 @@ class BookHelper: NSObject {
             "synchronous": "NORMAL" // 可选：平衡性能与安全
         ]
         let option: NSPersistentStoreDescription = .init()
+        option.shouldAddStoreAsynchronously = false
         option.shouldMigrateStoreAutomatically = true
         option.shouldInferMappingModelAutomatically = true
         option.setOption(dict as NSDictionary, forKey: NSSQLitePragmasOption)
@@ -69,6 +80,63 @@ extension BookHelper {
         context.automaticallyMergesChangesFromParent = true
         context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
         return context
+    }
+}
+
+extension BookHelper {
+    
+    /// parseWith
+    /// - Parameters:
+    ///   - fileURL: URL
+    ///   - encoding: Optional<String.Encoding>
+    ///   - safeArea: CGSize
+    ///   - textAttributes: Dictionary<NSAttributedString.Key, Any>
+    /// - Returns: BookEntity.Want
+    internal func parseWith(_ fileURL: URL,
+                            encoding: Optional<String.Encoding> = .none,
+                            safeArea: CGSize,
+                            textAttributes: Dictionary<NSAttributedString.Key, Any>) async throws -> BookEntity.Want {
+        var bookWant: BookEntity.Want = try await BookParser.parseWith(fileURL, encoding: encoding)
+        // 分页
+        bookWant = try await paginateWith(bookWant, safeArea: safeArea, textAttributes: textAttributes)
+        return bookWant
+    }
+    
+    /// paginateWith
+    /// - Parameters:
+    ///   - bookWant: BookEntity.Want
+    ///   - safeAreaInsets: UIEdgeInsets
+    ///   - textAttributes: BookEntity.Want
+    /// - Returns: Dictionary<NSAttributedString.Key, Any>
+    private func paginateWith(_ bookWant: BookEntity.Want,
+                              safeArea: CGSize,
+                              textAttributes: Dictionary<NSAttributedString.Key, Any>) async throws -> BookEntity.Want {
+        // 读取数据
+        let newText: String = try .init(contentsOf: bookWant.cacheURL, encoding: bookWant.encoding)
+        // 执行分页
+        let newArray = TextPaginator.paginate(text: newText, safeArea: safeArea, textAttributes: textAttributes)
+        // 同步数据库
+        let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
+        let newWant: BookEntity.Want = try context.hub.performAndWait { context in
+            let bookObj: BookEntity = try context.hub.fetchAny(for: bookWant.objectID)
+            bookObj.pages = []
+            try context.hub.saveAndWait()
+            newArray.sorted(by: { $0.offset < $1.offset }).enumerated().forEach { (index, element) in
+                let obj: PageEntity = .init(context: context)
+                obj.index   = Int64(index)
+                obj.offset  = element.offset
+                obj.length  = element.length
+                obj.text    = element.text
+                obj.sketchText = element.sketchText
+                obj.isTruncated = element.isTruncated
+                bookObj.addToPages(obj)
+            }
+            try context.obtainPermanentIDs(for: Array(bookObj.pages))
+            try context.hub.saveAndWait()
+            return bookObj.hub.want
+        }
+        // 返回新数据
+        return newWant
     }
 }
 

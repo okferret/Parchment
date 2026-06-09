@@ -21,6 +21,16 @@ extension BookEntity {
         internal let chapters: Array<ChapterEntity.Want>
         internal let pages: Array<PageEntity.Want>
         internal let marks: Array<MarkEntity.Want>
+        internal let currentIndex: Int64
+        
+        /// page at index
+        /// - Parameter index: Int64
+        /// - Returns: Optional<PageEntity.Want>
+        internal func pageAt(_ index: Optional<Int64>) -> Optional<PageEntity.Want> {
+            let newIndex: Int = Int(index ?? currentIndex)
+            guard (0 ..< pages.count).contains(newIndex) == true else { return .none }
+            return pages[newIndex]
+        }
     }
 }
 
@@ -43,7 +53,8 @@ extension CompatibleWrapper where Base: BookEntity {
                      cacheURL:      base.hub.cacheURL,
                      chapters:      base.chapters.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
                      pages:         base.pages.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
-                     marks:         base.marks.sorted(by: { $0.offset < $1.offset }).map(\.hub.want))
+                     marks:         base.marks.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
+                     currentIndex:  base.currentIndex)
     }
     
     /// URL
