@@ -41,42 +41,38 @@ extension BookParser {
             throw PAError.customWith("不支持当前文件")
         }
         let relativeUID: String = BookParser.relativeUID(for: fileURL)
-        // 查询数据库
+        // 查询数据库 缓存
         let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
-//        if let newWant: BookEntity.Want = try? context.hub.performAndWait({ context in
-//            let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
-//            freq.predicate = .init(format: "relativeUID == %@", relativeUID)
-//            freq.fetchLimit = 1
-//            freq.resultType = .managedObjectResultType
-//            return try context.fetch(freq).first?.hub.want
-//        }) {
-//            return newWant
-//        }
-        try? context.hub.performAndWait({ context in
+        let bookWant: Optional<BookEntity.Want> = try? context.hub.performAndWait({ context in
             let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
             freq.predicate = .init(format: "relativeUID == %@", relativeUID)
             freq.fetchLimit = 1
             freq.resultType = .managedObjectResultType
-            let objs = try context.fetch(freq)
-            objs.forEach { context.delete($0) }
-            try context.hub.saveAndWait()
+            return try context.fetch(freq).first?.hub.want
         })
+        if let bookWant = bookWant {
+            return bookWant
+        }
+        //        try? context.hub.performAndWait({ context in
+        //            let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
+        //            freq.predicate = .init(format: "relativeUID == %@", relativeUID)
+        //            freq.fetchLimit = 1
+        //            freq.resultType = .managedObjectResultType
+        //            let objs = try context.fetch(freq)
+        //            objs.forEach { context.delete($0) }
+        //            try context.hub.saveAndWait()
+        //        })
         // 解析数据
         let filename: String = FileManager.default.displayName(atPath: fileURL.path)
         let encoding: String.Encoding = try BookParser.detectEncoding(for: fileURL)
         // 预处理
-        var newText: String = try .init(contentsOf: fileURL, encoding: encoding)
-        newText = newText
-            .components(separatedBy: .newlines)
-            .map({ $0.trimmingCharacters(in: .whitespacesAndNewlines) })
-            .filter({ $0.hub.isBlank == false })
-            .joined(separator: "\n")
+        let newText: String = try .init(contentsOf: fileURL, encoding: encoding).hub.cleanText
         guard let newData: Data = newText.data(using: .utf8) else {
             throw PAError.customWith("文件编码失败")
         }
         
         // 解析章节信息
-        let elements = ChapterParser.parse(text: newText)
+        let elements = ChapterParser.parseWith(newText)
         // 准备参数
         let relativePath: String = "\(relativeUID)/\(filename)"
         let fileURL: URL

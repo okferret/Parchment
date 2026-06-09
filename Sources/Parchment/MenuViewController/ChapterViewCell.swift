@@ -30,7 +30,14 @@ class ChapterViewCell: UITableViewCell {
         let _label: UILabel = .init(frame: .zero)
         _label.font = .pingfangSC(ofSize: 14.0)
         _label.textAlignment = .left
-        _label.translatesAutoresizingMaskIntoConstraints = false
+        return _label
+    }()
+    
+    /// UILabel
+    private lazy var sketchLabel: UILabel = {
+        let _label: UILabel = .init(frame: .zero)
+        _label.font = .pingfangSC(ofSize: 10.0)
+        _label.textAlignment = .left
         return _label
     }()
     
@@ -40,7 +47,6 @@ class ChapterViewCell: UITableViewCell {
         _label.font = .pingfangSC(ofSize: 14.0)
         _label.text = "当前读到"
         _label.textAlignment = .right
-        _label.translatesAutoresizingMaskIntoConstraints = false
         _label.setContentHuggingPriority(.required, for: .horizontal)
         _label.setContentCompressionResistancePriority(.required, for: .horizontal)
         return _label
@@ -51,8 +57,30 @@ class ChapterViewCell: UITableViewCell {
         let _img: Optional<UIImage> = .module(named: "ic_mark")
         let _imgView: UIImageView = .init(image: _img)
         _imgView.contentMode = .scaleAspectFit
-        _imgView.translatesAutoresizingMaskIntoConstraints = false
+        _imgView.setContentHuggingPriority(.required, for: .horizontal)
+        _imgView.setContentCompressionResistancePriority(.required, for: .horizontal)
         return _imgView
+    }()
+    
+    /// UIStackView
+    private lazy var rightView: UIStackView = {
+        let _stackView: UIStackView = .init(arrangedSubviews: [] /*[markedView, markedLabel]*/)
+        _stackView.axis = .horizontal
+        _stackView.alignment = .center
+        _stackView.spacing = 4.0
+        _stackView.translatesAutoresizingMaskIntoConstraints = false
+        return _stackView
+    }()
+    
+    /// UIStackView
+    private lazy var leftView: UIStackView = {
+        let _stackView: UIStackView = .init(arrangedSubviews: [titleLabel, sketchLabel])
+        _stackView.axis = .vertical
+        _stackView.alignment = .leading
+        _stackView.distribution = .fill
+        _stackView.spacing = 4.0
+        _stackView.translatesAutoresizingMaskIntoConstraints = false
+        return _stackView
     }()
     
     //  MARK: - 生命周期
@@ -80,26 +108,20 @@ extension ChapterViewCell {
     /// 初始化
     private func initialize() {
         backgroundColor = .clear
+        selectionStyle = .none
+        
         // 添加约束
-        contentView.addSubview(markedLabel)
+        contentView.addSubview(rightView)
         NSLayoutConstraint.activate([
-            markedLabel.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -16.0),
-            markedLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            rightView.rightAnchor.constraint(equalTo: contentView.rightAnchor, constant: -16.0),
+            rightView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
         ])
         
-        contentView.addSubview(markedView)
+        contentView.addSubview(leftView)
         NSLayoutConstraint.activate([
-            markedView.rightAnchor.constraint(equalTo: markedLabel.leftAnchor, constant: -5.0),
-            markedView.centerYAnchor.constraint(equalTo: markedLabel.centerYAnchor),
-            markedView.widthAnchor.constraint(equalToConstant: 20.0),
-            markedView.heightAnchor.constraint(equalToConstant: 20.0),
-        ])
-        
-        contentView.addSubview(titleLabel)
-        NSLayoutConstraint.activate([
-            titleLabel.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 16.0),
-            titleLabel.rightAnchor.constraint(lessThanOrEqualTo: markedView.leftAnchor, constant: -16.0),
-            titleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            leftView.leftAnchor.constraint(equalTo: contentView.leftAnchor, constant: 16.0),
+            leftView.rightAnchor.constraint(lessThanOrEqualTo: rightView.leftAnchor, constant: -16.0),
+            leftView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
         ])
     }
     
@@ -108,8 +130,9 @@ extension ChapterViewCell {
     private func reloadWith(_ newWant: Optional<ChapterEntity.Want>) {
         guard let newWant = newWant else { return }
         titleLabel.text = newWant.title
-        print("chapter title =>", newWant.title)
         titleLabel.textColor = theme?.primaryTint
+        sketchLabel.text = newWant.sketchText
+        sketchLabel.textColor = theme?.secondaryText
         markedLabel.text = "当前读到"
         markedLabel.textColor = theme?.markedTint
         markedView.tintColor = theme?.markedTint

@@ -9,7 +9,22 @@
 import UIKit
 import CoreData
 
+/// ChapterViewControllerDelegate
+protocol ChapterViewControllerDelegate: AnyObject {
+    
+    /// selectedActionWith
+    /// - Parameters:
+    ///   - controller: ChapterViewController
+    ///   - newWant: ChapterEntity.Want
+    func controller(_ controller: ChapterViewController, selectedActionWith newWant: ChapterEntity.Want)
+}
+
 class ChapterViewController: UIViewController {
+    
+    //  MARK: - 公开属性
+    
+    /// Optional<ChapterViewControllerDelegate>
+    internal weak var delegate: Optional<ChapterViewControllerDelegate> = .none
     
     //  MARK: - 私有属性
     
@@ -25,10 +40,11 @@ class ChapterViewController: UIViewController {
         _tableView.translatesAutoresizingMaskIntoConstraints = false
         _tableView.backgroundColor = .clear
         _tableView.register(ChapterViewCell.self, forCellReuseIdentifier: ChapterViewCell.reusedID)
-        _tableView.rowHeight = 48.0
+        _tableView.rowHeight = 52.0
         _tableView.separatorColor = configuration.theme.separatorTint
         _tableView.separatorInset = .init(top: 0.0, left: 16.0, bottom: 0.0, right: 16.0)
         _tableView.separatorStyle = .singleLine
+        _tableView.delegate = self
         return _tableView
     }()
     
@@ -82,8 +98,10 @@ class ChapterViewController: UIViewController {
         // Do any additional setup after loading the view.
         // 初始化
         initialize()
-        // fetch data
-        try? frc.performFetch()
+        // next
+        Task(priority: .userInitiated) {
+            try frc.performFetch()
+        }
     }
     
     /// traitCollectionDidChange
@@ -113,7 +131,7 @@ extension ChapterViewController {
 }
 
 //  MARK: - NSFetchedResultsControllerDelegate
-extension ChapterViewController: NSFetchedResultsControllerDelegate {
+extension ChapterViewController: NSFetchedResultsControllerDelegate, UITableViewDelegate {
     
     /// didChangeContentWith
     /// - Parameters:
@@ -135,6 +153,17 @@ extension ChapterViewController: NSFetchedResultsControllerDelegate {
         }
         dataSource.apply(now, animatingDifferences: false)
         tableView.backgroundView?.isHidden = now.itemIdentifiers.isEmpty == false
+    }
+    
+    /// didSelectRowAt
+    /// - Parameters:
+    ///   - tableView: UITableView
+    ///   - indexPath: IndexPath
+    internal func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: false)
+        if let itemIdentifier = dataSource.itemIdentifier(for: indexPath), let delegate = delegate {
+            delegate.controller(self, selectedActionWith: itemIdentifier)
+        }
     }
 }
 

@@ -9,8 +9,23 @@
 
 import UIKit
 
+/// SegmentedViewControllerDelegate
+protocol SegmentedViewControllerDelegate: AnyObject {
+    
+    /// chapterActionWith
+    /// - Parameters:
+    ///   - controller: SegmentedViewController
+    ///   - newWant: ChapterEntity.Want
+    func controller(_ controller: SegmentedViewController, chapterActionWith newWant: ChapterEntity.Want)
+}
+
 /// SegmentedViewController
 class SegmentedViewController: UIViewController, MenuContentController {
+    
+    //  MARK: - 公开属性
+    
+    /// Optional<SegmentedViewControllerDelegate>
+    internal weak var delegate: Optional<SegmentedViewControllerDelegate> = .none
     
     //  MARK: - 私有属性
     
@@ -48,6 +63,8 @@ class SegmentedViewController: UIViewController, MenuContentController {
     private lazy var chapter: ChapterViewController = {
         let _controller: ChapterViewController = .init(forWhat: bookWant, configuration: configuration)
         _controller.view.translatesAutoresizingMaskIntoConstraints = false
+        _controller.view.frame = view.bounds
+        _controller.delegate = self
         return _controller
     }()
 
@@ -56,6 +73,7 @@ class SegmentedViewController: UIViewController, MenuContentController {
         let _controller: BookmarkViewController = .init(forWhat: bookWant, configuration: configuration)
         _controller.view.isHidden = true
         _controller.view.translatesAutoresizingMaskIntoConstraints = false
+        _controller.view.frame = view.bounds
         return _controller
     }()
     
@@ -192,5 +210,15 @@ extension SegmentedViewController {
     }
 }
 
+extension SegmentedViewController: ChapterViewControllerDelegate {
+    
+    /// selectedActionWith
+    /// - Parameters:
+    ///   - controller: ChapterViewController
+    ///   - newWant: ChapterEntity.Want
+    internal func controller(_ controller: ChapterViewController, selectedActionWith newWant: ChapterEntity.Want) {
+        delegate?.controller(self, chapterActionWith: newWant)
+    }
+}
 
 #endif

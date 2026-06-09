@@ -52,6 +52,15 @@ extension CompatibleWrapper where Base == String {
         return base.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true
     }
     
+    /// String
+    internal var cleanText: String {
+        return base
+            .components(separatedBy: .newlines)
+            .map({ $0.trimmingCharacters(in: .whitespacesAndNewlines) })
+            .filter({ $0.hub.isBlank == false })
+            .joined(separator: "\n")
+    }
+    
     /// 计算字符串在指定字体下的宽度
     /// - Parameter font: UIFont
     /// - Returns: CGFloat
@@ -60,6 +69,7 @@ extension CompatibleWrapper where Base == String {
         let size = (base as NSString).size(withAttributes: attributes)
         return size.width
     }
+    
 }
 
 #endif

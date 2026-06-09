@@ -72,6 +72,7 @@ final public class ParchmentViewController: UINavigationController {
         let _tapGesture: UITapGestureRecognizer = .init(target: self, action: #selector(tapActionHandler(_:)))
         _tapGesture.numberOfTapsRequired = 1
         _tapGesture.numberOfTouchesRequired = 1
+        _tapGesture.cancelsTouchesInView = false
         return _tapGesture
     }()
     
@@ -81,7 +82,15 @@ final public class ParchmentViewController: UINavigationController {
         _controller.view.backgroundColor = .black.withAlphaComponent(0.15)
         _controller.additionalSafeAreaInsets = .init(top: 0.0, left: 0.0, bottom: toolbar.bounds.height, right: 0.0)
         _controller.menuDelegate = self
+        _controller.view.translatesAutoresizingMaskIntoConstraints = false
         return _controller
+    }()
+    
+    /// 指示器
+    private lazy var loadingView: UIActivityIndicatorView = {
+        let _loadingView: UIActivityIndicatorView = .init(style: .medium)
+        _loadingView.hidesWhenStopped = true
+        return _loadingView
     }()
     
     /// Optional<BookEntity.Want>
@@ -176,24 +185,28 @@ extension ParchmentViewController {
         addChild(menuController)
         // 添加布局
         view.insertSubview(menuController.view, belowSubview: navigationBar)
-        
-        // 添加约束
-        menuController.view.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             menuController.view.leftAnchor.constraint(equalTo: view.leftAnchor),
             menuController.view.rightAnchor.constraint(equalTo: view.rightAnchor),
             menuController.view.topAnchor.constraint(equalTo: view.topAnchor),
             menuController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+        
+        view.addSubview(loadingView)
+        NSLayoutConstraint.activate([
+            loadingView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadingView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        ])
     }
     
     /// parseWith
     /// - Parameter fileURL: URL
     private func parseWith(_ fileURL: URL) {
+        loadingView.startAnimating()
         Task(priority: .userInitiated) {
             do {
                 let newWant: BookEntity.Want = try BookParser.parseWith(fileURL)
-                self.bookWant = newWant
+                bookWant = newWant
                 menuController.reloadWith(newWant)
             } catch {
                 let controller: UIAlertController = .init(title: "操作提醒", message: error.localizedDescription, preferredStyle: .alert)
@@ -202,6 +215,7 @@ extension ParchmentViewController {
                 }))
                 present(controller, animated: true, completion: .none)
             }
+            loadingView.stopAnimating()
         }
     }
     
@@ -220,7 +234,7 @@ extension ParchmentViewController {
             Set(bottomItemArray).subtracting([chapterItem]).forEach { $0.hub.state = .normal; $0.tintColor = configuration.theme.primaryTint }
             chapterItem.tintColor = configuration.theme.stressTint
             chapterItem.hub.state = .selected
-            menuController.showMenuWith(.chapter)
+            menuController.showMenuWith(.segmented)
             // tapGesture.isEnabled = false
             setNavigationBarHidden(true, animated: true)
             
@@ -276,25 +290,34 @@ extension ParchmentViewController {
                 return
             }
         }
-        
         if isToolbarHidden == true || isNavigationBarHidden == true {
-            setToolbarHidden(false, animated: true)
-            setNavigationBarHidden(false, animated: true)
-            menuController.view.isHidden = false
-            UIView.animate(withDuration: 0.25) {
-                self.menuController.view.alpha = 1.0
-            }
+            showBarAction()
         } else {
-            setToolbarHidden(true, animated: true)
-            setNavigationBarHidden(true, animated: true)
-            menuController.hideMenu()
-            UIView.animate(withDuration: 0.25) {
-                self.menuController.view.alpha = 0.0
-            } completion: { _ in
-                self.menuController.hideMenu()
-                self.menuController.view.isHidden = true
-                self.bottomItemArray.forEach { $0.hub.state = .normal; $0.tintColor = self.configuration.theme.primaryTint }
-            }
+            hideBarAction()
+        }
+    }
+    
+    /// showBarAction
+    private func showBarAction() {
+        setToolbarHidden(false, animated: true)
+        setNavigationBarHidden(false, animated: true)
+        menuController.view.isHidden = false
+        UIView.animate(withDuration: 0.25) {
+            self.menuController.view.alpha = 1.0
+        }
+    }
+    
+    /// hideBarAction
+    private func hideBarAction() {
+        setToolbarHidden(true, animated: true)
+        setNavigationBarHidden(true, animated: true)
+        menuController.hideMenu()
+        UIView.animate(withDuration: 0.25) {
+            self.menuController.view.alpha = 0.0
+        } completion: { _ in
+            self.menuController.hideMenu()
+            self.menuController.view.isHidden = true
+            self.bottomItemArray.forEach { $0.hub.state = .normal; $0.tintColor = self.configuration.theme.primaryTint }
         }
     }
     
@@ -369,6 +392,17 @@ extension ParchmentViewController: UIPageViewControllerDelegate, UIPageViewContr
 
 //  MARK: - MenuViewControllerDelegate
 extension ParchmentViewController: MenuViewControllerDelegate {
+    
+    /// chapterActionWith
+    /// - Parameters:
+    ///   - controller: MenuViewController
+    ///   - newWant: ChapterEntity.Want
+    internal func controller(_ controller: MenuViewController, chapterActionWith newWant: ChapterEntity.Want) {
+        Task(priority: .high) {
+            await controller.hideMenu()
+            hideBarAction()
+        }
+    }
     
     internal func controller(_ controller: MenuViewController, backwardActionWith sender: UIButton) {
         

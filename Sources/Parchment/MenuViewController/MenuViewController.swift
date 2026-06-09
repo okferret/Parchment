@@ -13,13 +13,14 @@ extension MenuViewController {
     
     /// MenuType
     enum MenuType {
-        case chapter
+        case segmented
         case progress
         case other
     }
 }
 
 protocol MenuViewControllerDelegate: UINavigationControllerDelegate {
+    func controller(_ controller: MenuViewController, chapterActionWith newWant: ChapterEntity.Want)
     func controller(_ controller: MenuViewController, backwardActionWith sender: UIButton)
     func controller(_ controller: MenuViewController, forewardActionWith sender: UIButton)
     func controller(_ controller: MenuViewController, progressActionWtih value: Float)
@@ -80,44 +81,68 @@ class MenuViewController: UINavigationController {
 
     /// 展示菜单
     /// - Parameter menuType: MenuType
-    internal func showMenuWith(_ menuType: MenuType) {
+    internal func showMenuWith(_ menuType: MenuType, completionHandler: Optional<() -> Void> = .none) {
         switch menuType {
-        case .chapter:
+        case .segmented:
             if let bookWant: BookEntity.Want = bookWant {
                 let controller: SegmentedViewController = .init(forWhat: bookWant, configuration: configuration)
-                showWith(controller)
+                controller.delegate = self
+                showWith(controller, completionHandler: completionHandler)
             }
         case .progress:
             if let bookWant: BookEntity.Want = bookWant {
                 let controller: ProgressViewController = .init(forWhat: bookWant, configuration: configuration)
                 controller.delegate = self
-                showWith(controller)
+                showWith(controller, completionHandler: completionHandler)
             }
         case .other:
             if let bookWant: BookEntity.Want = bookWant {
                 let controller: ConfigureViewController = .init(forWhat: bookWant, configuration: configuration)
                 controller.delegate = self
-                showWith(controller)
+                showWith(controller, completionHandler: completionHandler)
             }
         }
     }
     
+    /// showMenuWith
+    /// - Parameter menuType: MenuType
+    internal func showMenuWith(_ menuType: MenuType) async {
+        await withCheckedContinuation { continuation in
+            hideMenu { continuation.resume() }
+        }
+    }
+    
     /// showWith
-    /// - Parameter controller: UIViewController
-    private func showWith(_ controller: UIViewController) {
+    /// - Parameters:
+    ///   - controller: UIViewController
+    ///   - completionHandler: Optional<() -> Void>
+    private func showWith(_ controller: UIViewController, completionHandler: Optional<() -> Void> = .none) {
         if viewControllers.count > 1 {
             let newArray: Array<UIViewController> = [viewControllers[0], controller]
             setViewControllers(newArray, animated: true)
         } else {
             pushViewController(controller, animated: true)
         }
+        transitionCoordinator?.animate(alongsideTransition: .none) { _ in
+            completionHandler?()
+        }
     }
     
     /// 隐藏菜单
     /// - Parameters:
-    internal func hideMenu() {
+    internal func hideMenu(_ completionHandler: Optional<() -> Void> = .none) {
         guard viewControllers.count > 1 else { return }
         self.popViewController(animated: true)
+        transitionCoordinator?.animate(alongsideTransition: .none) { _ in
+            completionHandler?()
+        }
+    }
+    
+    /// hideMenu
+    internal func hideMenu() async {
+        await withCheckedContinuation { continuation in
+            hideMenu { continuation.resume() }
+        }
     }
 }
 
@@ -145,8 +170,16 @@ extension MenuViewController: UINavigationControllerDelegate {
 }
 
 //  MARK: -  ProgressViewControllerDelegate, ConfigureViewControllerDelegate
-extension MenuViewController: ProgressViewControllerDelegate, ConfigureViewControllerDelegate {
+extension MenuViewController: ProgressViewControllerDelegate, ConfigureViewControllerDelegate, SegmentedViewControllerDelegate {
     
+    /// chapterActionWith
+    /// - Parameters:
+    ///   - controller: SegmentedViewController
+    ///   - newWant: ChapterEntity.Want
+    internal func controller(_ controller: SegmentedViewController, chapterActionWith newWant: ChapterEntity.Want) {
+        menuDelegate?.controller(self, chapterActionWith: newWant)
+    }
+  
     /// backwardActionWith
     /// - Parameters:
     ///   - controller: ProgressViewController

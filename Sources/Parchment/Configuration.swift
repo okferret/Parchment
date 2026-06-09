@@ -176,6 +176,7 @@ struct Theme: Hashable {
     internal let markedTint: UIColor
     internal let primaryTint: UIColor
     internal let primaryText: UIColor
+    internal let secondaryText: UIColor
     internal let separatorTint: UIColor
     internal let indicator: UIColor
     internal let segmentBackground: UIColor
@@ -225,6 +226,7 @@ extension Theme: CaseIterable {
                      markedTint:         .hex("#54904E"),
                      primaryTint:       .hex("#333333"),
                      primaryText:       .hex("#333333"),
+                     secondaryText:     .hex("#666666"),
                      separatorTint:     .hex("#CAD7C8"),
                      indicator:         .hex("#BFCBBD"),
                      segmentBackground: .hex("#CAD7C8"),
@@ -245,6 +247,7 @@ extension Theme: CaseIterable {
                      markedTint:         .hex("#54904E"),
                      primaryTint:       .hex("#333333"),
                      primaryText:       .hex("#333333"),
+                     secondaryText:     .hex("#666666"),
                      separatorTint:     .hex("#C3CCD6"),
                      indicator:         .hex("#B9C1CA"),
                      segmentBackground: .hex("#C3CCD6"),
@@ -265,6 +268,7 @@ extension Theme: CaseIterable {
                      markedTint:         .hex("#54904E"),
                      primaryTint:       .hex("#333333"),
                      primaryText:       .hex("#333333"),
+                     secondaryText:     .hex("#666666"),
                      separatorTint:     .hex("#E9E9E9"),
                      indicator:         .hex("#DCDCDC"),
                      segmentBackground: .hex("#E9E9E9"),
@@ -285,6 +289,7 @@ extension Theme: CaseIterable {
                      markedTint:         .hex("#54904E"),
                      primaryTint:       .hex("#333333"),
                      primaryText:       .hex("#333333"),
+                     secondaryText:     .hex("#666666"),
                      separatorTint:     .hex("#EAE3DA"),
                      indicator:         .hex("#DDD7CE"),
                      segmentBackground: .hex("#EAE3DA"),
@@ -305,6 +310,7 @@ extension Theme: CaseIterable {
                      markedTint:         .hex("#54904E"),
                      primaryTint:       .hex("#CCCCCC"),
                      primaryText:       .hex("#CCCCCC"),
+                     secondaryText:     .hex("#999999"),
                      separatorTint:     .hex("#333333"),
                      indicator:         .hex("#666666"),
                      segmentBackground: .hex("#333333"),
