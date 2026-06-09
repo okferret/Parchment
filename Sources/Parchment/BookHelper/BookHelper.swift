@@ -20,7 +20,7 @@ class BookHelper: NSObject {
     
     /// NSManagedObjectContext
     internal static var viewContext: NSManagedObjectContext {
-        return container.viewContext
+        return BookHelper.shared.container.viewContext
     }
     
     /// UIEdgeInsets
@@ -35,15 +35,26 @@ class BookHelper: NSObject {
     
     //  MARK: - 私有属性
     
+    /// URL
+    private static let storeURL: URL = {
+        let fileURL: URL
+        if #available(iOS 16.0, *) {
+            fileURL = URL.dirURL.appending(component: "Parchment.sqlite", directoryHint: .notDirectory)
+        } else {
+            fileURL = URL.dirURL.appendingPathComponent("Parchment.sqlite", isDirectory: false)
+        }
+        return fileURL
+    }()
+
     /// NSPersistentContainer
-    internal static let container: NSPersistentContainer = {
+    internal let container: NSPersistentContainer = {
         // SQLite 优化选项
         let dict: Dictionary<String, String> = [
             "journal_mode": "WAL",  // Write-Ahead Logging 模式
             "cache_size": "2000",   // 缓存大小
             "synchronous": "NORMAL" // 可选：平衡性能与安全
         ]
-        let option: NSPersistentStoreDescription = .init()
+        let option: NSPersistentStoreDescription = .init(url: BookHelper.storeURL)
         option.shouldAddStoreAsynchronously = false
         option.shouldMigrateStoreAutomatically = true
         option.shouldInferMappingModelAutomatically = true

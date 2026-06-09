@@ -36,6 +36,7 @@ final public class Configuration: NSObject {
     internal var textAttributes: Dictionary<NSAttributedString.Key, Any> {
         let paragraphStyle: NSMutableParagraphStyle = .init()
         paragraphStyle.firstLineHeadIndent = "缩进".hub.width(with: font)
+        paragraphStyle.alignment = .natural
         return [.font: font, .foregroundColor: theme.primaryText, .paragraphStyle: paragraphStyle]
     }
     /// UserDefaults
@@ -149,12 +150,11 @@ extension Configuration {
     
     /// URL
     public static let dirURL: URL = {
-        let dirURL: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let newURL: URL
         if #available(iOS 16.0, *) {
-            newURL = dirURL.appending(path: "Parchment/Books", directoryHint: .isDirectory)
+            newURL = URL.dirURL.appending(path: "Books", directoryHint: .isDirectory)
         } else {
-            newURL = dirURL.appendingPathComponent("Parchment/Books", isDirectory: true)
+            newURL = URL.dirURL.appendingPathComponent("Books", isDirectory: true)
         }
         var isDir: ObjCBool = .init(false)
         if FileManager.default.fileExists(atPath: newURL.path, isDirectory: &isDir) == true && isDir.boolValue == false {
