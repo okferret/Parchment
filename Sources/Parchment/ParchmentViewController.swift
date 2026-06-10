@@ -208,7 +208,7 @@ extension ParchmentViewController {
         let safeAreaInsets: UIEdgeInsets = BookHelper.safeAreaInsets
         let safeArea: CGSize = keyWindow.bounds.inset(by: safeAreaInsets).size
         Task(priority: .userInitiated) {
-            do {     
+            do {
                 let newWant: BookEntity.Want = try await BookHelper.shared.parseWith(fileURL, safeArea: safeArea, textAttributes: configuration.textAttributes)
                 self.bookWant = newWant
                 menuController.reloadWith(newWant)
@@ -338,7 +338,7 @@ extension ParchmentViewController {
     private func forewardWith(_ bookWant: BookEntity.Want, pageViewController: UIPageViewController) {
         switch pageViewController.transitionStyle {
         case .scroll:
-            let newIndex: Int64 = bookWant.currentIndex + 1
+            let newIndex: Int64 = bookWant.completedUnitCount + 1
             if let newWant: PageEntity.Want = bookWant.pageAt(newIndex) {
                 let controller: ContentViewController = .init()
                 controller.reloadWith(newWant, configuration: configuration)
@@ -365,7 +365,7 @@ extension ParchmentViewController {
     private func backwardWith(_ bookWant: BookEntity.Want, pageViewController: UIPageViewController) {
         switch pageViewController.transitionStyle {
         case .scroll:
-            let newIndex: Int64 = bookWant.currentIndex - 1
+            let newIndex: Int64 = bookWant.completedUnitCount - 1
             if let newWant: PageEntity.Want = bookWant.pageAt(newIndex) {
                 let controller: ContentViewController = .init()
                 controller.reloadWith(newWant, configuration: configuration)
@@ -452,12 +452,12 @@ extension ParchmentViewController: UIPageViewControllerDelegate, UIPageViewContr
                                    didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
         // 更新进度
         if completed == true, let first = pageViewController.viewControllers?.first as? ContentViewController, let pageWant = first.pageWant {
-            bookWant?.currentIndex(pageWant.index)
+            bookWant?.completedUnitCount(pageWant.index)
             Task(priority: .userInitiated) {
                 let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
                 try context.hub.performAndWait { context in
                     let obj: BookEntity = try context.hub.fetchAny(for: pageWant.book)
-                    obj.currentIndex = pageWant.index
+                    obj.completedUnitCount = pageWant.index
                     try context.hub.saveAndWait()
                 }
             }

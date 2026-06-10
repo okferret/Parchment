@@ -11,7 +11,7 @@ import UIKit
 import CoreData
 
 /// BookHelper
-class BookHelper: NSObject {
+public class BookHelper: NSObject {
     
     //  MARK: - 公开属性
     
@@ -39,10 +39,11 @@ class BookHelper: NSObject {
     private static let storeURL: URL = {
         let fileURL: URL
         if #available(iOS 16.0, *) {
-            fileURL = URL.dirURL.appending(component: "Parchment.sqlite", directoryHint: .notDirectory)
+            fileURL = URL.dirURL.appending(component: "Database/Parchment.sqlite", directoryHint: .notDirectory)
         } else {
-            fileURL = URL.dirURL.appendingPathComponent("Parchment.sqlite", isDirectory: false)
+            fileURL = URL.dirURL.appendingPathComponent("Database/Parchment.sqlite", isDirectory: false)
         }
+        try? FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         return fileURL
     }()
 
@@ -87,10 +88,26 @@ extension BookHelper {
     /// - Returns: NSManagedObjectContext
     internal static func newBackgroundContext() -> NSManagedObjectContext {
         let context: NSManagedObjectContext = .init(concurrencyType: .privateQueueConcurrencyType)
-        context.parent = BookHelper.viewContext
+        context.parent = BookHelper.shared.container.viewContext
         context.automaticallyMergesChangesFromParent = true
         context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
         return context
+    }
+    
+    /// cleanWith
+    /// - Parameter fileURL: URL
+    public static func cleanWith(_ fileURL: URL) {
+        Task(priority: .userInitiated) {
+            let relativeUID: String = FileManager.default.hub.relativePath(for: fileURL).hub.md5
+            let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
+            try context.hub.performAndWait { context in
+                let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
+                freq.predicate = .init(format: "relativeUID == %@", relativeUID)
+                let objs: Array<BookEntity> = try context.fetch(freq)
+                objs.forEach { context.delete($0) }
+                try context.hub.saveAndWait()
+            }
+        }
     }
 }
 
@@ -132,9 +149,10 @@ extension BookHelper {
         let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
         let newWant: BookEntity.Want = try context.hub.performAndWait { context in
             let bookObj: BookEntity = try context.hub.fetchAny(for: bookWant.objectID)
+            // 先删除旧的 pages，但不立即保存，与新数据一起原子提交
+            bookObj.pages.forEach { context.delete($0) }
             bookObj.pages = []
             bookObj.isReady = false
-            try context.hub.saveAndWait()
             newArray.sorted(by: { $0.offset < $1.offset }).enumerated().forEach { (index, element) in
                 let obj: PageEntity = .init(context: context)
                 obj.index   = Int64(index)
@@ -145,6 +163,7 @@ extension BookHelper {
                 obj.isTruncated = element.isTruncated
                 bookObj.addToPages(obj)
             }
+            bookObj.totalUnitCount = Int64(newArray.count)
             bookObj.isReady = true
             try context.obtainPermanentIDs(for: Array(bookObj.pages))
             try context.hub.saveAndWait()

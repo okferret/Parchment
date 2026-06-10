@@ -40,15 +40,15 @@ extension BookParser {
         guard FileManager.default.fileExists(atPath: fileURL.path, isDirectory: &isDir) == true && isDir.boolValue == false else {
             throw PAError.customWith("不支持当前文件")
         }
-        let relativeUID: String = BookParser.relativeUID(for: fileURL)
+        let relativeUID: String = FileManager.default.hub.relativePath(for: fileURL).hub.md5
         // 查询数据库 缓存
         let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
         let bookWant: Optional<BookEntity.Want> = try? context.hub.performAndWait({ context in
             let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
             freq.predicate = .init(format: "relativeUID == %@", relativeUID)
             freq.fetchLimit = 1
-            freq.resultType = .managedObjectResultType
-            return try context.fetch(freq).first?.hub.want
+            let objs: Array<BookEntity> = try context.fetch(freq)
+            return objs.first?.hub.want
         })
         if let bookWant = bookWant {
             return bookWant
@@ -88,35 +88,27 @@ extension BookParser {
         try newData.write(to: fileURL, options: [.atomic])
         // 写入数据库
         let newWant: BookEntity.Want = try context.hub.performAndWait { context in
-            let book: BookEntity = .init(context: context)
-            book.relativeUID = relativeUID
-            book.relativePath = relativePath
-            book.hub.encoding = .utf8
-            book.filename = filename
-            book.chapters = []
-            book.marks = []
-            book.pages = []
+            let bookObj: BookEntity = .init(context: context)
+            bookObj.relativeUID = relativeUID
+            bookObj.relativePath = relativePath
+            bookObj.hub.encoding = .utf8
+            bookObj.filename = filename
+            bookObj.chapters = []
+            bookObj.marks = []
+            bookObj.pages = []
             elements.forEach { (title, offset, length, sketchText) in
                 let chapter: ChapterEntity = .init(context: context)
                 chapter.title = title
                 chapter.offset = offset
                 chapter.length = length
                 chapter.sketchText = sketchText
-                book.addToChapters(chapter)
+                bookObj.addToChapters(chapter)
             }
-            try context.obtainPermanentIDs(for: [book] + book.chapters)
+            try context.obtainPermanentIDs(for: [bookObj] + bookObj.chapters)
             try context.hub.saveAndWait()
-            return book.hub.want
+            return bookObj.hub.want
         }
         return newWant
-    }
-    
-    /// 计算关联ID
-    /// - Parameter fileURL: URL
-    /// - Returns: String
-    private static func relativeUID(for fileURL: URL) -> String {
-        let relativePath: String = FileManager.default.hub.relativePath(for: fileURL)
-        return relativePath.hub.md5
     }
 }
 

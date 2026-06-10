@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24901" systemVersion="25F80" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
     <entity name="BookEntity" representedClassName="BookEntity" syncable="YES">
-        <attribute name="currentIndex" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="completedUnitCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="encoding" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="filename" attributeType="String"/>
         <attribute name="isReady" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="relativePath" attributeType="String"/>
         <attribute name="relativeUID" attributeType="String"/>
+        <attribute name="totalUnitCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="chapters" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ChapterEntity" inverseName="book" inverseEntity="ChapterEntity"/>
         <relationship name="marks" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MarkEntity" inverseName="book" inverseEntity="MarkEntity"/>
         <relationship name="pages" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="PageEntity" inverseName="book" inverseEntity="PageEntity"/>

@@ -25,7 +25,8 @@ extension BookEntity {
     @NSManaged public var chapters: Set<ChapterEntity>
     @NSManaged public var marks: Set<MarkEntity>
     @NSManaged public var pages: Set<PageEntity>
-    @NSManaged public var currentIndex: Int64
+    @NSManaged public var completedUnitCount: Int64
+    @NSManaged public var totalUnitCount: Int64
     @NSManaged public var isReady: Bool
 
 }

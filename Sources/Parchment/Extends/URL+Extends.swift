@@ -19,7 +19,7 @@ extension URL {
             newURL = dirURL.appendingPathComponent("Parchment", isDirectory: true)
         }
         var isDir: ObjCBool = .init(false)
-        if FileManager.default.fileExists(atPath: newURL.path, isDirectory: &isDir) == true && isDir.boolValue == false {
+        if FileManager.default.fileExists(atPath: newURL.path, isDirectory: &isDir) == true && isDir.boolValue == true {
             return newURL
         } else {
             try? FileManager.default.removeItem(at: newURL)

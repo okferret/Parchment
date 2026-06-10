@@ -10,6 +10,18 @@ import Foundation
 
 extension BookEntity {
     
+    /// prepareForDeletion
+    public override func prepareForDeletion() {
+        defer { super.prepareForDeletion() }
+        // 删除数据
+        if FileManager.default.fileExists(atPath: hub.cacheURL.path) == true {
+            try? FileManager.default.removeItem(at: hub.cacheURL)
+        }
+    }
+}
+
+extension BookEntity {
+    
     /// Want
     struct Want: Hashable {
         internal let objectID: NSManagedObjectID
@@ -21,20 +33,21 @@ extension BookEntity {
         internal let chapters: Array<ChapterEntity.Want>
         internal let pages: Array<PageEntity.Want>
         internal let marks: Array<MarkEntity.Want>
-        private(set) var currentIndex: Int64
+        private(set) var completedUnitCount: Int64
+        internal let totalUnitCount: Int64
         internal let isReady: Bool
         
-        /// currentIndex
-        /// - Parameter currentIndex: Int64
-        internal mutating func currentIndex(_ currentIndex: Int64) {
-            self.currentIndex = currentIndex
+        /// completedUnitCount
+        /// - Parameter completedUnitCount: Int64
+        internal mutating func completedUnitCount(_ completedUnitCount: Int64) {
+            self.completedUnitCount = completedUnitCount
         }
         
         /// page at index
         /// - Parameter index: Int64
         /// - Returns: Optional<PageEntity.Want>
         internal func pageAt(_ index: Optional<Int64>) -> Optional<PageEntity.Want> {
-            let newIndex: Int = Int(index ?? currentIndex)
+            let newIndex: Int = Int(index ?? completedUnitCount)
             guard (0 ..< pages.count).contains(newIndex) == true else { return .none }
             return pages[newIndex]
         }
@@ -51,17 +64,18 @@ extension CompatibleWrapper where Base: BookEntity {
     
     /// BookEntity.Want
     internal var want: BookEntity.Want {
-        return .init(objectID:      base.objectID,
-                     relativeUID:   base.relativeUID,
-                     relativePath:  base.relativePath,
-                     filename:      base.filename,
-                     encoding:      base.hub.encoding,
-                     cacheURL:      base.hub.cacheURL,
-                     chapters:      base.chapters.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
-                     pages:         base.pages.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
-                     marks:         base.marks.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
-                     currentIndex:  base.currentIndex,
-                     isReady:       base.isReady)
+        return .init(objectID:               base.objectID,
+                     relativeUID:           base.relativeUID,
+                     relativePath:          base.relativePath,
+                     filename:              base.filename,
+                     encoding:              base.hub.encoding,
+                     cacheURL:              base.hub.cacheURL,
+                     chapters:              base.chapters.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
+                     pages:                 base.pages.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
+                     marks:                 base.marks.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
+                     completedUnitCount:    base.completedUnitCount,
+                     totalUnitCount:        base.totalUnitCount,
+                     isReady:               base.isReady)
     }
     
     /// URL
