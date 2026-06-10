@@ -40,7 +40,7 @@ extension CompatibleWrapper where Base: UIBarButtonItem {
     
     /// 状态
     internal var state: UIBarButtonItem.State {
-        get { .init(rawValue: (objc_getAssociatedObject(base, &UIBarButtonItem.stateKey) as? Int) ?? 0) }
+        get { .init(rawValue: (objc_getAssociatedObject(base, &UIBarButtonItem.stateKey) as? Int) ?? UIBarButtonItem.State.normal.rawValue) }
         set { objc_setAssociatedObject(base, &UIBarButtonItem.stateKey, newValue.rawValue, .OBJC_ASSOCIATION_ASSIGN) }
     }
 }

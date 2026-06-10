@@ -20,7 +20,7 @@ extension MarkEntity {
 
     @NSManaged public var length: Int64
     @NSManaged public var offset: Int64
-    @NSManaged public var text: String
+    @NSManaged public var sketchText: String
     @NSManaged public var createdAt: Date
     @NSManaged public var book: BookEntity
 

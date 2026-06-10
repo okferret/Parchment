@@ -84,14 +84,13 @@ extension BookEntity {
         /// page at index
         /// - Parameter index: Int64
         /// - Returns: Optional<PageEntity.Want>
-        internal func pageAt(_ index: Optional<Int64>) -> Optional<PageEntity.Want> {
+        internal func pageAt(_ index: Optional<Int64>, context: NSManagedObjectContext = BookHelper.viewContext) -> Optional<PageEntity.Want> {
             do {
                 let newIndex: Int = Int(index ?? currentIndex)
                 guard (0 ..< pages.count).contains(newIndex) == true else { return .none }
-                let context: NSManagedObjectContext = BookHelper.viewContext
                 return try context.hub.performAndWait { context in
                     let freq: NSFetchRequest<PageEntity> = PageEntity.fetchRequest()
-                    freq.predicate = .init(format: "book == %@ AND index == %ld", objectID, newIndex)
+                    freq.predicate = .init(format: "book == %@ AND index == %lld", objectID, newIndex)
                     freq.fetchLimit = 1
                     return try context.fetch(freq).first?.hub.want
                 }
@@ -100,6 +99,40 @@ extension BookEntity {
             }
         }
         
+        /// 获取章节信息
+        /// - Parameters:
+        ///   - pageIndex: Optional<Int64>
+        ///   - context: NSManagedObjectContext
+        /// - Returns: Optional<ChapterEntity.Want>
+        internal func chapterAt(_ pageIndex: Optional<Int64>, context: NSManagedObjectContext = BookHelper.viewContext) -> Optional<ChapterEntity.Want> {
+            do {
+                let newIndex: Int = Int(pageIndex ?? currentIndex)
+                let newWant: Optional<ChapterEntity.Want> = try context.hub.performAndWait { context in
+                    // 查询单页信息，仅获取 offset 与 length
+                    let pfreq: NSFetchRequest<PageEntity> = PageEntity.fetchRequest()
+                    pfreq.predicate = .init(format: "book == %@ AND index == %lld", objectID, newIndex)
+                    pfreq.fetchLimit = 1
+                    pfreq.propertiesToFetch = [#keyPath(PageEntity.offset), #keyPath(PageEntity.length)]
+                    guard let page = try context.fetch(pfreq).first else { return .none }
+                    let pageOffset = page.offset
+                    let pageEnd    = page.offset + page.length - 1
+                    // 页面与章节范围有交集的条件：chapterOffset <= pageEnd && chapterEnd >= pageOffset
+                    // 数据库层面用 offset <= pageEnd 缩小候选集，按 offset 降序排列
+                    // NSPredicate 不支持字段间算术，chapterEnd >= pageOffset 在内存中验证
+                    let freq: NSFetchRequest<ChapterEntity> = ChapterEntity.fetchRequest()
+                    freq.predicate = .init(format: "book == %@ AND offset <= %lld", objectID, pageEnd)
+                    freq.sortDescriptors = [.init(key: #keyPath(ChapterEntity.offset), ascending: false)]
+                    let objs: Array<ChapterEntity> = try context.fetch(freq)
+                    // 从最近章节起逐一验证：章节末尾 >= 页面起始（即存在交集）
+                    return objs.first { obj in
+                        obj.offset + obj.length - 1 >= pageOffset
+                    }?.hub.want
+                }
+                return newWant
+            } catch {
+                return .none
+            }
+        }
     }
 }
 

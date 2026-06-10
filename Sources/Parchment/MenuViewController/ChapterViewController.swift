@@ -53,7 +53,7 @@ class ChapterViewController: UIViewController {
         let cell: ChapterViewCell = tableView.dequeueReusableCell(withIdentifier: ChapterViewCell.reusedID, for: indexPath) as! ChapterViewCell
         cell.theme = self?.configuration.theme
         cell.newWant = itemIdentifier
-        cell.isCurrentted = self?.pageWant?.isBelongTo(itemIdentifier) == true
+        cell.isCurrentted = self?.chapterWant?.objectID == itemIdentifier.objectID
         return cell
     }
     
@@ -75,8 +75,8 @@ class ChapterViewController: UIViewController {
     /// Configuration
     private let configuration: Configuration
     
-    /// Optional<PageEntity.Want>
-    private let pageWant: Optional<PageEntity.Want>
+    /// Optional<ChapterEntity.Want>
+    private let chapterWant: Optional<ChapterEntity.Want>
     
     //  MARK: - 生命周期
     
@@ -87,7 +87,7 @@ class ChapterViewController: UIViewController {
     internal init(forWhat bookWant: BookEntity.Want, configuration: Configuration) {
         self.bookWant = bookWant
         self.configuration = configuration
-        self.pageWant = bookWant.pageAt(.none)
+        self.chapterWant = bookWant.chapterAt(.none)
         super.init(nibName: .none, bundle: .none)
     }
     
@@ -158,9 +158,9 @@ extension ChapterViewController: NSFetchedResultsControllerDelegate, UITableView
         }
         dataSource.apply(now, animatingDifferences: false)
         tableView.backgroundView?.isHidden = now.itemIdentifiers.isEmpty == false
-        if let itemIdentifier = now.itemIdentifiers.first(where: { pageWant?.isBelongTo($0) == true }),
+        if let itemIdentifier = now.itemIdentifiers.first(where: { chapterWant?.objectID == $0.objectID }),
            let indexPath: IndexPath = dataSource.indexPath(for: itemIdentifier) {
-            tableView.scrollToRow(at: indexPath, at: .top, animated: false)
+            tableView.scrollToRow(at: indexPath, at: .middle, animated: false)
         }
     }
     

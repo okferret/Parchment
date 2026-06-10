@@ -21,6 +21,7 @@ extension MenuViewController {
 
 protocol MenuViewControllerDelegate: UINavigationControllerDelegate {
     func controller(_ controller: MenuViewController, chapterActionWith newWant: ChapterEntity.Want)
+    func controller(_ controller: MenuViewController, bookmarkActionWith newWant: MarkEntity.Want)
     func controller(_ controller: MenuViewController, backwardActionWith sender: UIButton)
     func controller(_ controller: MenuViewController, forewardActionWith sender: UIButton)
     func controller(_ controller: MenuViewController, progressActionWtih value: Float)
@@ -179,6 +180,14 @@ extension MenuViewController: ProgressViewControllerDelegate, ConfigureViewContr
     ///   - newWant: ChapterEntity.Want
     internal func controller(_ controller: SegmentedViewController, chapterActionWith newWant: ChapterEntity.Want) {
         menuDelegate?.controller(self, chapterActionWith: newWant)
+    }
+    
+    /// bookmarkActionWith
+    /// - Parameters:
+    ///   - controller: SegmentedViewController
+    ///   - newWant: MarkEntity.Want
+    internal func controller(_ controller: SegmentedViewController, bookmarkActionWith newWant: MarkEntity.Want) {
+        menuDelegate?.controller(self, bookmarkActionWith: newWant)
     }
   
     /// backwardActionWith

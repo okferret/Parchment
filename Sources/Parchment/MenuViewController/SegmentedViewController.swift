@@ -17,6 +17,12 @@ protocol SegmentedViewControllerDelegate: AnyObject {
     ///   - controller: SegmentedViewController
     ///   - newWant: ChapterEntity.Want
     func controller(_ controller: SegmentedViewController, chapterActionWith newWant: ChapterEntity.Want)
+    
+    /// bookmarkActionWith
+    /// - Parameters:
+    ///   - controller: SegmentedViewController
+    ///   - newWant: MarkEntity.Want
+    func controller(_ controller: SegmentedViewController, bookmarkActionWith newWant: MarkEntity.Want)
 }
 
 /// SegmentedViewController
@@ -74,6 +80,7 @@ class SegmentedViewController: UIViewController, MenuContentController {
         _controller.view.isHidden = true
         _controller.view.translatesAutoresizingMaskIntoConstraints = false
         _controller.view.frame = view.bounds
+        _controller.delegate = self
         return _controller
     }()
     
@@ -210,7 +217,7 @@ extension SegmentedViewController {
     }
 }
 
-extension SegmentedViewController: ChapterViewControllerDelegate {
+extension SegmentedViewController: ChapterViewControllerDelegate, BookmarkViewControllerDelegate {
     
     /// selectedActionWith
     /// - Parameters:
@@ -218,6 +225,14 @@ extension SegmentedViewController: ChapterViewControllerDelegate {
     ///   - newWant: ChapterEntity.Want
     internal func controller(_ controller: ChapterViewController, selectedActionWith newWant: ChapterEntity.Want) {
         delegate?.controller(self, chapterActionWith: newWant)
+    }
+    
+    /// selectedActionWith
+    /// - Parameters:
+    ///   - controller: BookmarkViewController
+    ///   - newWant: MarkEntity.Want
+    internal func controller(_ controller: BookmarkViewController, selectedActionWith newWant: MarkEntity.Want) {
+        delegate?.controller(self, bookmarkActionWith: newWant)
     }
 }
 
