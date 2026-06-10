@@ -41,7 +41,7 @@ class MenuViewController: UINavigationController {
     //  MARK: - 私有属性
     
     ///  BookEntity.Want
-    private(set) var bookWant: Optional<BookEntity.Want>
+    private var bookWant: Optional<BookEntity.Want>
     /// Configuration
     private let configuration: Configuration
     
@@ -76,6 +76,7 @@ class MenuViewController: UINavigationController {
     /// reloadWith
     /// - Parameter bookWant: BookEntity.Want
     internal func reloadWith(_ bookWant: BookEntity.Want) {
+        guard bookWant !== self.bookWant else { return }
         self.bookWant = bookWant
     }
 

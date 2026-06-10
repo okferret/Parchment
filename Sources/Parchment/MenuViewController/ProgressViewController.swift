@@ -67,6 +67,7 @@ class ProgressViewController: UIViewController, MenuContentController {
         _button.imageView?.contentMode = .scaleAspectFit
         _button.translatesAutoresizingMaskIntoConstraints = false
         _button.widthAnchor.constraint(equalToConstant: 20.0).isActive = true
+        _button.addTarget(self, action: #selector(buttonActionHandler(_:)), for: .touchUpInside)
         return _button
     }()
     
@@ -79,13 +80,14 @@ class ProgressViewController: UIViewController, MenuContentController {
         _button.imageView?.contentMode = .scaleAspectFit
         _button.translatesAutoresizingMaskIntoConstraints = false
         _button.widthAnchor.constraint(equalToConstant: 20.0).isActive = true
+        _button.addTarget(self, action: #selector(buttonActionHandler(_:)), for: .touchUpInside)
         return _button
     }()
     
     /// UISlider
     private(set) lazy var sliderView: UISliderView = {
         let _sliderView: UISliderView = .init(frame: .zero)
-        _sliderView.isContinuous = false
+        _sliderView.isContinuous = true
         _sliderView.layer.cornerRadius = 14.0
         _sliderView.layer.masksToBounds = true
         _sliderView.translatesAutoresizingMaskIntoConstraints = false
@@ -142,6 +144,10 @@ class ProgressViewController: UIViewController, MenuContentController {
         // Do any additional setup after loading the view.
         // 初始化
         initialize()
+        // 注册通知
+        NotificationCenter.default.addObserver(self, selector: #selector(notificationHandler(_:)), name: BookHelper.progressNotification, object: .none)
+        // 同步数据
+        sliderView.value = Float(bookWant.currentIndex) / Float(bookWant.totalUnitCount - 1)
     }
     
     /// traitCollectionDidChange
@@ -162,6 +168,9 @@ class ProgressViewController: UIViewController, MenuContentController {
         sliderView.thumbTintColor = configuration.theme.thumbTintColor
     }
     
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
 }
 
 extension ProgressViewController {
@@ -206,6 +215,19 @@ extension ProgressViewController {
         default: break
         }
     }
+    
+    /// notificationHandler
+    /// - Parameter sender: Notification
+    @objc private func notificationHandler(_ sender: Notification) {
+        switch sender.name {
+        case BookHelper.progressNotification:
+            guard let currentIndex = sender.userInfo?["currentIndex"] as? Int64,
+                  let totalUnitCount = sender.userInfo?["totalUnitCount"] as? Int64
+            else { return }
+            sliderView.value = Float(currentIndex) / Float(totalUnitCount - 1)
+        default: break
+        }
+    }
 }
 
 //  MARK: - UISliderViewDelegate
@@ -224,7 +246,7 @@ extension ProgressViewController: UISliderViewDelegate {
     ///   - sliderView: UISliderView
     ///   - slideValue: Float
     internal func sliderView(_ sliderView: UISliderView, slideAction slideValue: Float) {
-        progressLabel.text = "阅读进度：\(NumberFormatter.default.hub.string(from: slideValue, numberStyle: .percent))"
+        progressLabel.text = "阅读进度：\(NumberFormatter.default.hub.string(from: slideValue, minimumFractionDigits: 0, numberStyle: .percent))"
         leftButton.isEnabled = slideValue > 0.0
         rightButton.isEnabled = slideValue < 1.0
     }

@@ -92,7 +92,17 @@ final public class ParchmentViewController: UINavigationController {
         let _loadingView: UIActivityIndicatorView = .init(style: .medium)
         _loadingView.hidesWhenStopped = true
         _loadingView.translatesAutoresizingMaskIntoConstraints = false
+        _loadingView.color = .white
         return _loadingView
+    }()
+    
+    private lazy var indexLabel: UILabel = {
+        let _label: UILabel = .init(frame: .zero)
+        _label.font = .systemFont(ofSize: 12.0, weight: .medium)
+        _label.textColor = configuration.theme.secondaryText
+        _label.textAlignment = .right
+        _label.translatesAutoresizingMaskIntoConstraints = false
+        return _label
     }()
     
     /// Optional<BookEntity.Want>
@@ -169,13 +179,6 @@ final public class ParchmentViewController: UINavigationController {
         // 解析数据
         parseWith(fileURL)
     }
-    
-    /// viewWillAppear
-    /// - Parameter animated: Bool
-    public override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        view.bringSubviewToFront(loadingView)
-    }
 
     deinit {
         NotificationCenter.default.removeObserver(self)
@@ -206,31 +209,38 @@ extension ParchmentViewController {
             loadingView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             loadingView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
+        
+        view.insertSubview(indexLabel, belowSubview: toolbar)
+        NSLayoutConstraint.activate([
+            indexLabel.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -32.0),
+            indexLabel.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -10.0)
+        ])
     }
     
-    /// parseWith
-    /// - Parameter fileURL: URL
-    private func parseWith(_ fileURL: URL, useCached: Bool = true) {
-        guard let keyWindow = UIApplication.shared.hub.keyWindow else { return }
-        let safeAreaInsets: UIEdgeInsets = BookHelper.safeAreaInsets
-        let safeArea: CGSize = keyWindow.bounds.inset(by: safeAreaInsets).size
-        Task(priority: .userInitiated) {
-            let start = CACurrentMediaTime()
-            defer {
-                let end = CACurrentMediaTime()
-                print("end - start =>", end - start)
-            }
+    /// 解析书籍
+    /// - Parameters:
+    ///   - fileURL: URL
+    ///   - useCached: Bool
+    ///   - priority: TaskPriority
+    private func parseWith(_ fileURL: URL, useCached: Bool = true, priority: TaskPriority = .userInitiated) {
+        Task(priority: priority) {
+            guard let keyWindow = UIApplication.shared.hub.keyWindow else { return }
+            let safeAreaInsets: UIEdgeInsets = BookHelper.safeAreaInsets
+            let safeArea: CGSize = keyWindow.bounds.inset(by: safeAreaInsets).size
+            loadingView.hub.startAnimating()
             do {
-                let newWant: BookEntity.Want = try await BookHelper.shared.parseWith(fileURL,
-                                                                                     safeArea: safeArea,
-                                                                                     textAttributes: configuration.textAttributes, useCached: useCached)
-                self.bookWant = newWant
+                let newWant: BookEntity.Want = try await BookHelper.parseWith(fileURL,
+                                                                              safeArea: safeArea,
+                                                                              textAttributes: configuration.textAttributes,
+                                                                              useCached: useCached)
+                if bookWant == .none {
+                    bookWant = newWant
+                } else {
+                    bookWant?.remakeWith(newWant)
+                }
                 menuController.reloadWith(newWant)
-                if let topViewController = topViewController as? UIPageViewController, let pageWant: PageEntity.Want = newWant.pageAt(.none) {
-                    let controller: ContentViewController = .init()
-                    controller.additionalSafeAreaInsets = .init(top: 0.0, left: safeAreaInsets.left, bottom: 0.0, right: safeAreaInsets.right)
-                    controller.reloadWith(pageWant, configuration: configuration)
-                    topViewController.setViewControllers([controller], direction: .forward, animated: false)
+                if let pageWant: PageEntity.Want = bookWant?.pageAt(.none) {
+                    gotoPageWith(pageWant, direction: .forward, animated: false, completionHandler: .none)
                 }
             } catch {
                 let controller: UIAlertController = .init(title: "操作提醒", message: error.localizedDescription, preferredStyle: .alert)
@@ -239,7 +249,7 @@ extension ParchmentViewController {
                 }))
                 present(controller, animated: true, completion: .none)
             }
-            loadingView.stopAnimating()
+            loadingView.hub.stopAnimating()
         }
     }
     
@@ -259,14 +269,12 @@ extension ParchmentViewController {
             chapterItem.tintColor = configuration.theme.stressTint
             chapterItem.hub.state = .selected
             menuController.showMenuWith(.segmented)
-            // tapGesture.isEnabled = false
             setNavigationBarHidden(true, animated: true)
             
         case chapterItem where sender.hub.state == .selected:
             chapterItem.tintColor = configuration.theme.primaryTint
             chapterItem.hub.state = .normal
             menuController.hideMenu()
-            // tapGesture.isEnabled = true
             setNavigationBarHidden(false, animated: true)
             
         case progressItem where sender.hub.state == .normal:
@@ -274,14 +282,12 @@ extension ParchmentViewController {
             progressItem.tintColor = configuration.theme.stressTint
             progressItem.hub.state = .selected
             menuController.showMenuWith(.progress)
-            // tapGesture.isEnabled = false
             setNavigationBarHidden(false, animated: true)
             
         case progressItem where sender.hub.state == .selected:
             progressItem.tintColor = configuration.theme.primaryTint
             progressItem.hub.state = .normal
             menuController.hideMenu()
-            // tapGesture.isEnabled = true
             setNavigationBarHidden(false, animated: true)
         
         case otherItem where sender.hub.state == .normal:
@@ -289,14 +295,12 @@ extension ParchmentViewController {
             otherItem.tintColor = configuration.theme.stressTint
             otherItem.hub.state = .selected
             menuController.showMenuWith(.other)
-            // tapGesture.isEnabled = false
             setNavigationBarHidden(false, animated: true)
             
         case otherItem where sender.hub.state == .selected:
             otherItem.tintColor = configuration.theme.primaryTint
             otherItem.hub.state = .normal
             menuController.hideMenu()
-            // tapGesture.isEnabled = true
             setNavigationBarHidden(false, animated: true)
             
         default: break
@@ -345,6 +349,25 @@ extension ParchmentViewController {
         }
     }
     
+    /// gotoPageWith
+    /// - Parameters:
+    ///   - pageWant: PageEntity.Want
+    ///   - direction: NavigationDirection
+    ///   - animated: Bool
+    ///   - completionHandler: @escaping () -> Void
+    private func gotoPageWith(_ pageWant: PageEntity.Want, direction: NavigationDirection, animated: Bool, completionHandler: Optional<() -> Void>) {
+        guard let pageViewController = topViewController as? UIPageViewController else { return }
+        let controller: ContentViewController = .init()
+        controller.reloadWith(pageWant, configuration: configuration)
+        let previousViewControllers: Array<UIViewController> = pageViewController.viewControllers ?? []
+        pageViewController.setViewControllers([controller], direction: direction, animated: animated) {[weak pageViewController, weak tapGesture] finished in
+            defer { completionHandler?() }
+            guard let pageViewController = pageViewController else { return }
+            pageViewController.delegate?.pageViewController?(pageViewController,  didFinishAnimating: true,
+                                                             previousViewControllers: previousViewControllers, transitionCompleted: true)
+        }
+    }
+    
     /// 下一页
     /// - Parameters:
     ///   - bookWant: BookEntity.Want
@@ -352,19 +375,11 @@ extension ParchmentViewController {
     private func forewardWith(_ bookWant: BookEntity.Want, pageViewController: UIPageViewController) {
         switch pageViewController.transitionStyle {
         case .scroll:
-            let newIndex: Int64 = bookWant.completedUnitCount + 1
+            let newIndex: Int64 = bookWant.currentIndex + 1
             if let newWant: PageEntity.Want = bookWant.pageAt(newIndex) {
-                let controller: ContentViewController = .init()
-                controller.reloadWith(newWant, configuration: configuration)
-                let previousViewControllers: Array<UIViewController> = pageViewController.viewControllers ?? []
                 tapGesture.isEnabled = false
-                pageViewController.setViewControllers([controller], direction: .forward, animated: true) {[weak pageViewController, weak tapGesture] finished in
-                    defer { tapGesture?.isEnabled = true }
-                    guard let pageViewController = pageViewController, finished == true else { return }
-                    pageViewController.delegate?.pageViewController?(pageViewController,
-                                                                     didFinishAnimating: true,
-                                                                     previousViewControllers: previousViewControllers,
-                                                                     transitionCompleted: true)
+                gotoPageWith(newWant, direction: .forward, animated: true) {[weak tapGesture] in
+                    tapGesture?.isEnabled = true
                 }
             }
             
@@ -379,19 +394,11 @@ extension ParchmentViewController {
     private func backwardWith(_ bookWant: BookEntity.Want, pageViewController: UIPageViewController) {
         switch pageViewController.transitionStyle {
         case .scroll:
-            let newIndex: Int64 = bookWant.completedUnitCount - 1
+            let newIndex: Int64 = bookWant.currentIndex - 1
             if let newWant: PageEntity.Want = bookWant.pageAt(newIndex) {
-                let controller: ContentViewController = .init()
-                controller.reloadWith(newWant, configuration: configuration)
-                let previousViewControllers: Array<UIViewController> = pageViewController.viewControllers ?? []
                 tapGesture.isEnabled = false
-                pageViewController.setViewControllers([controller], direction: .reverse, animated: true) {[weak pageViewController, weak tapGesture] finished in
-                    defer { tapGesture?.isEnabled = true }
-                    guard let pageViewController = pageViewController, finished == true else { return }
-                    pageViewController.delegate?.pageViewController?(pageViewController,
-                                                                     didFinishAnimating: true,
-                                                                     previousViewControllers: previousViewControllers,
-                                                                     transitionCompleted: true)
+                gotoPageWith(newWant, direction: .reverse, animated: true) {[weak tapGesture] in
+                    tapGesture?.isEnabled = true
                 }
             }
             
@@ -463,19 +470,30 @@ extension ParchmentViewController: UIPageViewControllerDelegate, UIPageViewContr
     ///   - previousViewControllers: [UIViewController]
     ///   - completed: Bool
     public func pageViewController(_ pageViewController: UIPageViewController,
-                                   didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
+                                   didFinishAnimating finished: Bool,
+                                   previousViewControllers: [UIViewController],
+                                   transitionCompleted completed: Bool) {
+        guard completed == true,
+              let first = pageViewController.viewControllers?.first as? ContentViewController,
+              let pageWant = first.pageWant,
+              let bookWant = bookWant
+        else { return }
         // 更新进度
-        if completed == true, let first = pageViewController.viewControllers?.first as? ContentViewController, let pageWant = first.pageWant {
-            bookWant?.completedUnitCount(pageWant.index)
-            Task(priority: .utility) {
-                let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
-                try context.hub.performAndWait { context in
-                    let obj: BookEntity = try context.hub.fetchAny(for: pageWant.book)
-                    obj.completedUnitCount = pageWant.index
-                    try context.hub.saveAndWait()
-                }
+        bookWant.currentIndex(pageWant.index)
+        Task(priority: .userInitiated) {
+            let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
+            try context.hub.performAndWait { context in
+                let obj: BookEntity = try context.hub.fetchAny(for: pageWant.book)
+                obj.currentIndex = pageWant.index
+                try context.hub.saveAndWait()
             }
         }
+        // 更新角标
+        indexLabel.text = "\(pageWant.index + 1)/\(bookWant.totalUnitCount)"
+        // 发送通知
+        NotificationCenter.default.post(name: BookHelper.progressNotification, object: .none, userInfo: [
+            "bookWant": bookWant, "currentIndex": bookWant.currentIndex, "totalUnitCount": bookWant.totalUnitCount
+        ])
     }
     
     /// viewControllerBefore
@@ -530,14 +548,6 @@ extension ParchmentViewController: UIPageViewControllerDelegate, UIPageViewContr
     public func pageViewControllerPreferredInterfaceOrientationForPresentation(_ pageViewController: UIPageViewController) -> UIInterfaceOrientation {
         return .portrait
     }
-    
-    public func presentationCount(for pageViewController: UIPageViewController) -> Int {
-        return Int(bookWant?.totalUnitCount ?? 0)
-    }
-    
-    public func presentationIndex(for pageViewController: UIPageViewController) -> Int {
-        return Int(bookWant?.completedUnitCount ?? 0)
-    }
 }
 
 //  MARK: - MenuViewControllerDelegate
@@ -554,16 +564,36 @@ extension ParchmentViewController: MenuViewControllerDelegate {
         }
     }
     
+    /// backwardActionWith
+    /// - Parameters:
+    ///   - controller: MenuViewController
+    ///   - sender: UIButton
     internal func controller(_ controller: MenuViewController, backwardActionWith sender: UIButton) {
-        
+        if let bookWant = bookWant, let topViewController = topViewController as? UIPageViewController {
+            backwardWith(bookWant, pageViewController: topViewController)
+        }
     }
     
+    /// forewardActionWith
+    /// - Parameters:
+    ///   - controller: MenuViewController
+    ///   - sender: UIButton
     internal func controller(_ controller: MenuViewController, forewardActionWith sender: UIButton) {
-        
+        if let bookWant = bookWant, let topViewController = topViewController as? UIPageViewController {
+            forewardWith(bookWant, pageViewController: topViewController)
+        }
     }
     
+    /// progressActionWtih
+    /// - Parameters:
+    ///   - controller: MenuViewController
+    ///   - value: Float
     internal func controller(_ controller: MenuViewController, progressActionWtih value: Float) {
-        
+        guard let bookWant = bookWant else { return }
+        let index: Int64 = Int64(Float(bookWant.totalUnitCount - 1) * value)
+        if let newWant: PageEntity.Want = bookWant.pageAt(index) {
+            gotoPageWith(newWant, direction: .forward, animated: false, completionHandler: .none)
+        }
     }
     
     /// brightnessActionWith

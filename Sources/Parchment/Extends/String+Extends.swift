@@ -47,17 +47,12 @@ extension CompatibleWrapper where Base == String {
         return Insecure.MD5.hash(data: base.hub.utf8Data).map { String(format: "%02x", $0) }.joined()
     }
     
-    /// Bool
-    internal var isBlank: Bool {
-        return base.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true
-    }
-    
     /// String
     internal var cleanText: String {
         return base
             .components(separatedBy: .newlines)
-            .map({ $0.trimmingCharacters(in: .whitespacesAndNewlines) })
-            .filter({ $0.hub.isBlank == false })
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { $0.isEmpty == false }
             .joined(separator: "\n")
     }
     

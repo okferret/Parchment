@@ -23,24 +23,62 @@ extension BookEntity {
 extension BookEntity {
     
     /// Want
-    struct Want: Hashable {
+    class Want: NSObject {
         internal let objectID: NSManagedObjectID
         internal let relativeUID: String
         internal let relativePath: String
         internal let filename: String
         internal let encoding: String.Encoding
         internal let cacheURL: URL
-        internal let chapters: Array<NSManagedObjectID>
-        internal let pages: Array<NSManagedObjectID>
-        internal let marks: Array<NSManagedObjectID>
-        private(set) var completedUnitCount: Int64
-        internal let totalUnitCount: Int64
-        internal let isReady: Bool
+        private(set) var chapters: Set<NSManagedObjectID>
+        private(set) var pages: Set<NSManagedObjectID>
+        private(set) var marks: Set<NSManagedObjectID>
+        private(set) var currentIndex: Int64
+        private(set) var totalUnitCount: Int64
+        private(set) var isReady: Bool
+        /// 构造函数
+        internal init(objectID: NSManagedObjectID,
+                      relativeUID: String,
+                      relativePath: String,
+                      filename: String,
+                      encoding: String.Encoding,
+                      cacheURL: URL,
+                      chapters: Set<NSManagedObjectID>,
+                      pages: Set<NSManagedObjectID>,
+                      marks: Set<NSManagedObjectID>,
+                      currentIndex: Int64,
+                      totalUnitCount: Int64,
+                      isReady: Bool) {
+            self.objectID = objectID
+            self.relativeUID = relativeUID
+            self.relativePath = relativePath
+            self.filename = filename
+            self.encoding = encoding
+            self.cacheURL = cacheURL
+            self.chapters = chapters
+            self.pages = pages
+            self.marks = marks
+            self.currentIndex = currentIndex
+            self.totalUnitCount = totalUnitCount
+            self.isReady = isReady
+            super.init()
+        }
         
-        /// completedUnitCount
-        /// - Parameter completedUnitCount: Int64
-        internal mutating func completedUnitCount(_ completedUnitCount: Int64) {
-            self.completedUnitCount = completedUnitCount
+        /// currentIndex
+        /// - Parameter currentIndex: Int64
+        internal func currentIndex(_ currentIndex: Int64) {
+            self.currentIndex = currentIndex
+        }
+        
+        /// remakeWith
+        /// - Parameter newWant: BookEntity.Want
+        internal func remakeWith(_ newWant: BookEntity.Want) {
+            self.chapters = newWant.chapters
+            self.pages = newWant.pages
+            self.marks = newWant.marks
+            self.currentIndex = newWant.currentIndex
+            self.totalUnitCount = newWant.totalUnitCount
+            self.isReady = newWant.isReady
         }
         
         /// page at index
@@ -48,7 +86,7 @@ extension BookEntity {
         /// - Returns: Optional<PageEntity.Want>
         internal func pageAt(_ index: Optional<Int64>) -> Optional<PageEntity.Want> {
             do {
-                let newIndex: Int = Int(index ?? completedUnitCount)
+                let newIndex: Int = Int(index ?? currentIndex)
                 guard (0 ..< pages.count).contains(newIndex) == true else { return .none }
                 let context: NSManagedObjectContext = BookHelper.viewContext
                 return try context.hub.performAndWait { context in
@@ -74,18 +112,18 @@ extension CompatibleWrapper where Base: BookEntity {
     
     /// BookEntity.Want
     internal var want: BookEntity.Want {
-        return .init(objectID:               base.objectID,
-                     relativeUID:           base.relativeUID,
-                     relativePath:          base.relativePath,
-                     filename:              base.filename,
-                     encoding:              base.hub.encoding,
-                     cacheURL:              base.hub.cacheURL,
-                     chapters:              base.chapters.map(\.objectID),
-                     pages:                 base.pages.map(\.objectID),
-                     marks:                 base.marks.map(\.objectID),
-                     completedUnitCount:    base.completedUnitCount,
-                     totalUnitCount:        base.totalUnitCount,
-                     isReady:               base.isReady)
+        return .init(objectID:          base.objectID,
+                     relativeUID:       base.relativeUID,
+                     relativePath:      base.relativePath,
+                     filename:          base.filename,
+                     encoding:          base.hub.encoding,
+                     cacheURL:          base.hub.cacheURL,
+                     chapters:          Set(base.chapters.map(\.objectID)),
+                     pages:             Set(base.pages.map(\.objectID)),
+                     marks:             Set(base.marks.map(\.objectID)),
+                     currentIndex:      base.currentIndex,
+                     totalUnitCount:    base.totalUnitCount,
+                     isReady:           base.isReady)
     }
     
     /// URL

@@ -72,10 +72,10 @@ public class BookHelper: NSObject {
         container.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
         let semaphore = DispatchSemaphore(value: 0)
         container.loadPersistentStores { (_, error) in
+            defer { semaphore.signal() }
             if let error = error {
                 print("Core Data load error: \(error)")
             }
-            semaphore.signal()
         }
         semaphore.wait()
         return container
@@ -123,13 +123,30 @@ extension BookHelper {
     internal func parseWith(_ fileURL: URL,
                             encoding: Optional<String.Encoding> = .none,
                             safeArea: CGSize,
-                            textAttributes: Dictionary<NSAttributedString.Key, Any>, useCached: Bool = true) async throws -> BookEntity.Want {
+                            textAttributes: Dictionary<NSAttributedString.Key, Any>,
+                            useCached: Bool = true) async throws -> BookEntity.Want {
         let bookWant: BookEntity.Want = try await BookParser.parseWith(fileURL, encoding: encoding)
         if useCached == false || bookWant.isReady == false {
             return try await paginateWith(bookWant, safeArea: safeArea, textAttributes: textAttributes)
         } else {
             return bookWant
         }
+    }
+    
+    /// parseWith
+    /// - Parameters:
+    ///   - fileURL: URL
+    ///   - encoding: Optional<String.Encoding>
+    ///   - safeArea: CGSize
+    ///   - textAttributes: Dictionary<NSAttributedString.Key, Any>
+    ///   - useCached: Bool
+    /// - Returns: BookEntity.Want
+    internal static func parseWith(_ fileURL: URL,
+                                   encoding: Optional<String.Encoding> = .none,
+                                   safeArea: CGSize,
+                                   textAttributes: Dictionary<NSAttributedString.Key, Any>,
+                                   useCached: Bool = true) async throws -> BookEntity.Want {
+       return try await BookHelper.shared.parseWith(fileURL, encoding: encoding, safeArea: safeArea, textAttributes: textAttributes, useCached: useCached)
     }
     
     /// paginateWith
@@ -143,8 +160,7 @@ extension BookHelper {
                               textAttributes: Dictionary<NSAttributedString.Key, Any>) async throws -> BookEntity.Want {
         // 获取当前偏移量
         let offset: Int64
-        if (0 ..< bookWant.pages.count).contains(Int(bookWant.completedUnitCount)) == true,
-           let newWant: PageEntity.Want = bookWant.pageAt(bookWant.completedUnitCount) {
+        if let newWant: PageEntity.Want = bookWant.pageAt(bookWant.currentIndex) {
             offset = newWant.offset
         } else {
             offset = 0
@@ -152,10 +168,7 @@ extension BookHelper {
         // 读取数据
         let newText: String = try .init(contentsOf: bookWant.cacheURL, encoding: bookWant.encoding)
         // 执行分页
-        let start = CACurrentMediaTime()
         let newArray = TextPaginator.paginate(text: newText, safeArea: safeArea, textAttributes: textAttributes)
-        let end = CACurrentMediaTime()
-        print("TextPaginator =>", end - start)
         // 同步数据库
         let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
         let newWant: BookEntity.Want = try context.hub.performAndWait { context in
@@ -177,7 +190,7 @@ extension BookHelper {
             bookObj.totalUnitCount = Int64(newArray.count)
             bookObj.isReady = true
             // 修复：使用枚举索引（页码）而非字节偏移，与 pageAt(_:) 的数组下标语义一致
-            bookObj.completedUnitCount = Int64(enumerated.first(where: { $0.element.offset >= offset })?.0 ?? 0)
+            bookObj.currentIndex = Int64(enumerated.first(where: { $0.element.offset >= offset })?.0 ?? 0)
             bookObj.totalUnitCount = Int64(newArray.count)
             try context.obtainPermanentIDs(for: Array(bookObj.pages))
             try context.hub.saveAndWait()
@@ -186,6 +199,12 @@ extension BookHelper {
         // 返回新数据
         return newWant
     }
+}
+
+extension BookHelper {
+    
+    /// BookHelper.progressNotification
+    internal static let progressNotification: Notification.Name  = .init(rawValue: "BookHelper.progressNotification")
 }
 
 #endif
