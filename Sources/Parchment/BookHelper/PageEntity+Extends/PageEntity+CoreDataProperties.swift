@@ -21,7 +21,6 @@ extension PageEntity {
     @NSManaged public var length: Int64
     @NSManaged public var offset: Int64
     @NSManaged public var index: Int64
-    @NSManaged public var sketchText: String
     @NSManaged public var text: String
     @NSManaged public var isTruncated: Bool
     @NSManaged public var book: BookEntity

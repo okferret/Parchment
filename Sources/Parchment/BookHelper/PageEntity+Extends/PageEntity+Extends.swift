@@ -11,10 +11,10 @@ import Foundation
 extension PageEntity {
     
     /// Want
+    /// Want
     struct Want: Hashable {
         internal let objectID: NSManagedObjectID
         internal let text: String
-        internal let sketchText: String
         internal let index: Int64
         internal let offset: Int64
         internal let length: Int64
@@ -29,7 +29,6 @@ extension CompatibleWrapper where Base: PageEntity {
     internal var want: PageEntity.Want {
         return .init(objectID:      base.objectID,
                      text:          base.text,
-                     sketchText:    base.sketchText,
                      index:         base.index,
                      offset:        base.offset,
                      length:        base.length,

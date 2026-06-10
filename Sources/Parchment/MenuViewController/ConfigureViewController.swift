@@ -130,8 +130,8 @@ class ConfigureViewController: UIViewController, MenuContentController {
         _sliderView.thumbTextFont = .systemFont(ofSize: 14.0, weight: .medium)
         _sliderView.thumbTintColor = configuration.theme.thumbTintColor
         _sliderView.minimumValue = 16.0
-        _sliderView.maximumValue = 40.0
-        _sliderView.trackValues = Array(16...40).map { Float($0)}
+        _sliderView.maximumValue = 32.0
+        _sliderView.trackValues = Array(16...32).map { Float($0)}
         _sliderView.translatesAutoresizingMaskIntoConstraints = false
         _sliderView.value = Float(configuration.font.pointSize)
         _sliderView.delegate = self

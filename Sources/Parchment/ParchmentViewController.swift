@@ -214,7 +214,7 @@ extension ParchmentViewController {
         guard let keyWindow = UIApplication.shared.hub.keyWindow else { return }
         let safeAreaInsets: UIEdgeInsets = BookHelper.safeAreaInsets
         let safeArea: CGSize = keyWindow.bounds.inset(by: safeAreaInsets).size
-        Task(priority: .high) {
+        Task(priority: .userInitiated) {
             let start = CACurrentMediaTime()
             defer {
                 let end = CACurrentMediaTime()
@@ -531,6 +531,13 @@ extension ParchmentViewController: UIPageViewControllerDelegate, UIPageViewContr
         return .portrait
     }
     
+    public func presentationCount(for pageViewController: UIPageViewController) -> Int {
+        return Int(bookWant?.totalUnitCount ?? 0)
+    }
+    
+    public func presentationIndex(for pageViewController: UIPageViewController) -> Int {
+        return Int(bookWant?.completedUnitCount ?? 0)
+    }
 }
 
 //  MARK: - MenuViewControllerDelegate

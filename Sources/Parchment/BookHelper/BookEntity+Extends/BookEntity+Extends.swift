@@ -30,9 +30,9 @@ extension BookEntity {
         internal let filename: String
         internal let encoding: String.Encoding
         internal let cacheURL: URL
-        internal let chapters: Array<ChapterEntity.Want>
-        internal let pages: Array<PageEntity.Want>
-        internal let marks: Array<MarkEntity.Want>
+        internal let chapters: Array<NSManagedObjectID>
+        internal let pages: Array<NSManagedObjectID>
+        internal let marks: Array<NSManagedObjectID>
         private(set) var completedUnitCount: Int64
         internal let totalUnitCount: Int64
         internal let isReady: Bool
@@ -47,9 +47,19 @@ extension BookEntity {
         /// - Parameter index: Int64
         /// - Returns: Optional<PageEntity.Want>
         internal func pageAt(_ index: Optional<Int64>) -> Optional<PageEntity.Want> {
-            let newIndex: Int = Int(index ?? completedUnitCount)
-            guard (0 ..< pages.count).contains(newIndex) == true else { return .none }
-            return pages[newIndex]
+            do {
+                let newIndex: Int = Int(index ?? completedUnitCount)
+                guard (0 ..< pages.count).contains(newIndex) == true else { return .none }
+                let context: NSManagedObjectContext = BookHelper.viewContext
+                return try context.hub.performAndWait { context in
+                    let freq: NSFetchRequest<PageEntity> = PageEntity.fetchRequest()
+                    freq.predicate = .init(format: "book == %@ AND index == %ld", objectID, newIndex)
+                    freq.fetchLimit = 1
+                    return try context.fetch(freq).first?.hub.want
+                }
+            } catch {
+                return .none
+            }
         }
     }
 }
@@ -70,9 +80,9 @@ extension CompatibleWrapper where Base: BookEntity {
                      filename:              base.filename,
                      encoding:              base.hub.encoding,
                      cacheURL:              base.hub.cacheURL,
-                     chapters:              base.chapters.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
-                     pages:                 base.pages.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
-                     marks:                 base.marks.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
+                     chapters:              base.chapters.map(\.objectID),
+                     pages:                 base.pages.map(\.objectID),
+                     marks:                 base.marks.map(\.objectID),
                      completedUnitCount:    base.completedUnitCount,
                      totalUnitCount:        base.totalUnitCount,
                      isReady:               base.isReady)

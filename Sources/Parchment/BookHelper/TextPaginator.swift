@@ -6,7 +6,7 @@ import CoreText
 /// 基于 CoreText 的高效文本分页器
 ///
 /// 使用 `CTFramesetter` 精确计算每页可容纳的文本范围，
-/// 返回每页的文本内容、UTF-8 字节偏移及摘要信息。
+/// 返回每页的文本内容、UTF-8 字节偏移信息。
 ///
 /// ## 使用示例
 /// ```swift
@@ -17,7 +17,7 @@ import CoreText
 /// )
 /// let paginator = TextPaginator(configuration: config)
 /// let pages = paginator.paginate(text: novelText)
-/// // pages: [(text: String, offset: Int64, length: Int64, sketchText: String, isTruncated: Bool)]
+/// // pages: [(text: String, offset: Int64, length: Int64, isTruncated: Bool)]
 /// ```
 ///
 /// ## 性能说明
@@ -33,8 +33,6 @@ final class TextPaginator {
     struct Configuration {
         /// 页面尺寸（单位：点，pt）
         var pageSize: CGSize
-        /// 摘要最大字符数（默认 80）
-        var sketchMaxLength: Int
         /// 默认字体（用于未传入 textAttributes 时的分页计算）
         /// 必须与渲染器使用的字体一致，否则分页边界与渲染结果会不吻合。
         /// 默认值：PingFangSC-Regular 17pt
@@ -42,11 +40,9 @@ final class TextPaginator {
         
         init(
             pageSize: CGSize = CGSize(width: 375, height: 600),
-            sketchMaxLength: Int = 80,
             font: CTFont = CTFontCreateWithName("PingFangSC-Regular" as CFString, 17, nil)
         ) {
             self.pageSize = pageSize
-            self.sketchMaxLength = sketchMaxLength
             self.font = font
         }
         
@@ -86,20 +82,19 @@ final class TextPaginator {
     
     // MARK: - Public API
     
+    // MARK: - Public API
+    
     /// 对文本进行分页
     /// - Parameters:
     ///   - text: 待分页的原始文本
     ///   - textAttributes: 可选的文本排版属性字典，若提供则覆盖 Configuration 中的字体/段落样式
-    /// - Returns: 每页信息数组 `[(text, offset, length, sketchText, isTruncated)]`
+    /// - Returns: 每页信息数组 `[(text, offset, length, isTruncated)]`
     ///   - `text`        : 该页的文本内容（原样保留所有空格、换行、缩进字符）
     ///   - `offset`      : 该页在原始 UTF-8 字节流中的起始偏移
     ///   - `length`      : 该页在原始 UTF-8 字节流中的字节长度
-    ///   - `sketchText`  : 该页的文本摘要（前 N 个非空白字符）
     ///   - `isTruncated` : 该页第一行是否是被截断的（即上一页末尾行在本页延续）；
     ///                     第一页始终为 `false`，后续页若上一页末尾字符不是换行符则为 `true`
-    func paginate(text: String, textAttributes: [NSAttributedString.Key: Any]? = nil) -> [(text: String, offset: Int64, length: Int64, sketchText: String, isTruncated: Bool)] {
-        guard !text.isEmpty else { return [] }
-        
+    func paginate(text: String, textAttributes: [NSAttributedString.Key: Any]? = nil) -> [(text: String, offset: Int64, length: Int64, isTruncated: Bool)] {
         // 1. 构建带排版属性的 NSAttributedString（一次性，整个分页过程复用）
         let attrString = buildAttributedString(from: text, overrideAttributes: textAttributes)
         let totalUTF16 = attrString.length
@@ -270,11 +265,10 @@ final class TextPaginator {
         slices: [PageSlice],
         totalUTF8Bytes: Int64,
         nsText: NSString
-    ) -> [(text: String, offset: Int64, length: Int64, sketchText: String, isTruncated: Bool)] {
+    ) -> [(text: String, offset: Int64, length: Int64, isTruncated: Bool)] {
         guard !slices.isEmpty else { return [] }
         
         let totalUTF16 = nsText.length
-        let maxSketch  = configuration.sketchMaxLength
         
         // 强制连续切片：第 i 页的实际长度 = 第 i+1 页起点 - 第 i 页起点，
         // 确保所有字符（包括空行、行首空格、全角空格等）完整保留，无遗漏无重叠。
@@ -285,7 +279,6 @@ final class TextPaginator {
             
             let pageText = nsText.substring(with: NSRange(location: slice.utf16Location,
                                                           length:   length))
-            let sketch = makeSketch(from: pageText, maxLen: maxSketch)
             
             // utf8Length 同步修正：使用连续切片对应的实际字节长度。
             // 最后一页的 utf8End 使用 totalUTF8Bytes（offsetMap 哨兵值），
@@ -319,54 +312,8 @@ final class TextPaginator {
             
             return (text: pageText, offset: slice.utf8Offset,
                     length: utf8End - slice.utf8Offset,
-                    sketchText: sketch,
                     isTruncated: isTruncated)
         }
-    }
-    
-    // MARK: - Private: Sketch
-    
-    /// 包含半角空白和全角空格（U+3000）的字符集，静态构建避免每页重复分配
-    private static let sketchWhitespaceSet = CharacterSet.whitespaces
-        .union(CharacterSet(charactersIn: "\u{3000}"))
-    
-    /// 从页面文本中提取摘要（跳过空行，合并多行为单行，截取前 maxLen 个字符）
-    ///
-    /// 优化点：
-    /// - 使用静态 `CharacterSet` 一次性 trim 半角空白 + 全角空格，替代 while 循环
-    /// - 用 `Substring` 避免 `split` 产生的 String 拷贝
-    private func makeSketch(from pageText: String, maxLen: Int) -> String {
-        guard !pageText.isEmpty, maxLen > 0 else { return "" }
-        
-        let wsSet = Self.sketchWhitespaceSet
-        
-        var result = ""
-        result.reserveCapacity(maxLen + 4)
-        var charCount = 0
-        
-        for line in pageText.split(separator: "\n", omittingEmptySubsequences: true) {
-            guard charCount < maxLen else { break }
-            
-            let trimmed = line.trimmingCharacters(in: wsSet)
-            guard !trimmed.isEmpty else { continue }
-            
-            let sep    = result.isEmpty ? "" : " "
-            let sepLen = sep.isEmpty ? 0 : 1
-            let room   = maxLen - charCount - sepLen
-            guard room > 0 else { break }
-            
-            result += sep
-            if trimmed.count <= room {
-                result    += trimmed
-                charCount += sepLen + trimmed.count
-            } else {
-                result    += String(trimmed.prefix(room))
-                charCount  = maxLen
-                break
-            }
-        }
-        
-        return result
     }
 }
 
@@ -383,13 +330,11 @@ extension TextPaginator {
     ///     `kCTParagraphStyleAttributeName` 等 CoreText 属性键；
     ///     若字典非空，将直接用于分页计算（分页字体由字典中的 `kCTFontAttributeName` 决定）；
     ///     若字典为空，则使用默认字体（PingFangSC-Regular 17pt）和默认段落样式
-    ///   - sketchMaxLength: 摘要最大字符数（默认 80）
-    /// - Returns: 每页信息数组 `[(text, offset, length, sketchText, isTruncated)]`
+    /// - Returns: 每页信息数组 `[(text, offset, length, isTruncated)]`
     static func paginate(text: String,
                          safeArea: CGSize,
-                         textAttributes: [NSAttributedString.Key: Any],
-                         sketchMaxLength: Int = 80) -> [(text: String, offset: Int64, length: Int64, sketchText: String, isTruncated: Bool)] {
-        let configuration: Configuration = Configuration(pageSize: safeArea, sketchMaxLength: sketchMaxLength)
+                         textAttributes: [NSAttributedString.Key: Any]) -> [(text: String, offset: Int64, length: Int64, isTruncated: Bool)] {
+        let configuration: Configuration = Configuration(pageSize: safeArea)
         return TextPaginator(configuration: configuration).paginate(text: text, textAttributes: textAttributes.isEmpty ? nil : textAttributes)
     }
 }
