@@ -33,12 +33,20 @@ final public class Configuration: NSObject {
     private(set) var theme: Theme = .paleMint
     private(set) var brightness: CGFloat = 0.5
     private(set) var font: UIFont = .pingfangSC(ofSize: 16.0)
+    
+    /// NSMutableParagraphStyle
+    internal var paragraphStyle: NSMutableParagraphStyle {
+        let obj: NSMutableParagraphStyle = .init()
+        obj.firstLineHeadIndent = "缩进".hub.width(with: font)
+        obj.alignment = .natural
+        return obj
+    }
+    
+    /// Dictionary<NSAttributedString.Key, Any>
     internal var textAttributes: Dictionary<NSAttributedString.Key, Any> {
-        let paragraphStyle: NSMutableParagraphStyle = .init()
-        paragraphStyle.firstLineHeadIndent = "缩进".hub.width(with: font)
-        paragraphStyle.alignment = .natural
         return [.font: font, .foregroundColor: theme.primaryText, .paragraphStyle: paragraphStyle]
     }
+    
     /// UserDefaults
     private lazy var userDefaults: UserDefaults = {
         let _obj: UserDefaults

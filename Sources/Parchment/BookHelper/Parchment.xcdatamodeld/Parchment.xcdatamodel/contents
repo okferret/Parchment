@@ -4,6 +4,7 @@
         <attribute name="currentIndex" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="encoding" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="filename" attributeType="String"/>
+        <attribute name="isReady" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="relativePath" attributeType="String"/>
         <attribute name="relativeUID" attributeType="String"/>
         <relationship name="chapters" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ChapterEntity" inverseName="book" inverseEntity="ChapterEntity"/>

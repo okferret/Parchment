@@ -385,20 +385,12 @@ extension TextPaginator {
     ///     若字典为空，则使用默认字体（PingFangSC-Regular 17pt）和默认段落样式
     ///   - sketchMaxLength: 摘要最大字符数（默认 80）
     /// - Returns: 每页信息数组 `[(text, offset, length, sketchText, isTruncated)]`
-    static func paginate(
-        text: String,
-        safeArea: CGSize,
-        textAttributes: [NSAttributedString.Key: Any],
-        sketchMaxLength: Int = 80
-    ) -> [(text: String, offset: Int64, length: Int64, sketchText: String, isTruncated: Bool)] {
-        let config = Configuration(
-            pageSize: safeArea,
-            sketchMaxLength: sketchMaxLength
-        )
-        return TextPaginator(configuration: config).paginate(
-            text: text,
-            textAttributes: textAttributes.isEmpty ? nil : textAttributes
-        )
+    static func paginate(text: String,
+                         safeArea: CGSize,
+                         textAttributes: [NSAttributedString.Key: Any],
+                         sketchMaxLength: Int = 80) -> [(text: String, offset: Int64, length: Int64, sketchText: String, isTruncated: Bool)] {
+        let configuration: Configuration = Configuration(pageSize: safeArea, sketchMaxLength: sketchMaxLength)
+        return TextPaginator(configuration: configuration).paginate(text: text, textAttributes: textAttributes.isEmpty ? nil : textAttributes)
     }
 }
 

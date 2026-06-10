@@ -8,7 +8,6 @@
 #if canImport(CoreData)
 import CoreData
 
-extension NSManagedObjectContext: Compatible {}
 extension CompatibleWrapper where Base: NSManagedObjectContext {
     
     /// performAndWait

@@ -21,7 +21,6 @@ extension MarkEntity {
     }
 }
 
-extension MarkEntity: Compatible {}
 extension CompatibleWrapper where Base: MarkEntity {
     
     /// MarkEntity.Want 

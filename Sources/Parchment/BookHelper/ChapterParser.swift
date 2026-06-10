@@ -637,6 +637,10 @@ final class ChapterParser {
 // MARK: - Convenience
 
 extension ChapterParser {
+    
+    /// parseWith
+    /// - Parameter text: String
+    /// - Returns: [(title: String, offset: Int64, length: Int64, sketchText: String)]
     internal static func parseWith(_ text: String) -> [(title: String, offset: Int64, length: Int64, sketchText: String)] {
         ChapterParser().parseItems(from: text).map { ($0.title, $0.offset, $0.length, $0.sketchText) }
     }

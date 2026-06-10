@@ -8,7 +8,6 @@
 #if canImport(UIKit)
 import UIKit
 
-extension NSLayoutConstraint: Compatible {}
 extension CompatibleWrapper where Base: NSLayoutConstraint {
 
     /// firstItem

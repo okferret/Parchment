@@ -21,7 +21,6 @@ extension ChapterEntity {
     }
 }
 
-extension ChapterEntity: Compatible {}
 extension CompatibleWrapper where Base: ChapterEntity {
     
     /// ChapterEntity.Want

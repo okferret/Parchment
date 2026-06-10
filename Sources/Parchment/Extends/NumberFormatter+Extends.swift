@@ -21,7 +21,6 @@ extension NumberFormatter {
     }()
 }
 
-extension NumberFormatter: Compatible {}
 extension CompatibleWrapper where Base: NumberFormatter {
     
     /// string from newValue

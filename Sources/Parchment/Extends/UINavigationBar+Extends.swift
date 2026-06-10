@@ -9,7 +9,6 @@
 
 import UIKit
 
-extension UINavigationBar: Compatible {}
 extension CompatibleWrapper where Base: UINavigationBar {
     
     /// Reset background and shadow properties to their defaults.

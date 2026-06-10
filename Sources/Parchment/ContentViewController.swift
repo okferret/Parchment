@@ -78,7 +78,12 @@ extension ContentViewController {
             if pageWant.isTruncated == true {
                 let newText: NSMutableAttributedString = .init(string: pageWant.text, attributes: configuration.textAttributes)
                 if let lineText: String = pageWant.text.components(separatedBy: .newlines).first {
-                    newText.removeAttribute(.paragraphStyle, range: .init(lineText.startIndex..., in: lineText))
+                    let range: NSRange = .init(lineText.startIndex..., in: lineText)
+                    newText.removeAttribute(.paragraphStyle, range: range)
+                    if let paragraphStyle: NSMutableParagraphStyle = configuration.paragraphStyle.hub.mutableCopy() {
+                        paragraphStyle.firstLineHeadIndent = 0.0
+                        newText.addAttribute(.paragraphStyle, value: pageWant, range: range)
+                    }
                 }
                 self.contentView.attributedText = newText
             } else {

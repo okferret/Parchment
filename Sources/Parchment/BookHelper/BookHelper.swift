@@ -106,11 +106,13 @@ extension BookHelper {
     internal func parseWith(_ fileURL: URL,
                             encoding: Optional<String.Encoding> = .none,
                             safeArea: CGSize,
-                            textAttributes: Dictionary<NSAttributedString.Key, Any>) async throws -> BookEntity.Want {
-        var bookWant: BookEntity.Want = try await BookParser.parseWith(fileURL, encoding: encoding)
-        // 分页
-        bookWant = try await paginateWith(bookWant, safeArea: safeArea, textAttributes: textAttributes)
-        return bookWant
+                            textAttributes: Dictionary<NSAttributedString.Key, Any>, useCached: Bool = true) async throws -> BookEntity.Want {
+        let bookWant: BookEntity.Want = try await BookParser.parseWith(fileURL, encoding: encoding)
+        if useCached == true, bookWant.isReady == true {
+            return bookWant
+        } else {
+            return try await paginateWith(bookWant, safeArea: safeArea, textAttributes: textAttributes)
+        }
     }
     
     /// paginateWith
@@ -131,6 +133,7 @@ extension BookHelper {
         let newWant: BookEntity.Want = try context.hub.performAndWait { context in
             let bookObj: BookEntity = try context.hub.fetchAny(for: bookWant.objectID)
             bookObj.pages = []
+            bookObj.isReady = false
             try context.hub.saveAndWait()
             newArray.sorted(by: { $0.offset < $1.offset }).enumerated().forEach { (index, element) in
                 let obj: PageEntity = .init(context: context)
@@ -142,6 +145,7 @@ extension BookHelper {
                 obj.isTruncated = element.isTruncated
                 bookObj.addToPages(obj)
             }
+            bookObj.isReady = true
             try context.obtainPermanentIDs(for: Array(bookObj.pages))
             try context.hub.saveAndWait()
             return bookObj.hub.want

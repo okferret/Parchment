@@ -23,7 +23,6 @@ extension PageEntity {
     }
 }
 
-extension PageEntity: Compatible {}
 extension CompatibleWrapper where Base: PageEntity {
     
     /// PageEntity.Want
@@ -35,6 +34,6 @@ extension CompatibleWrapper where Base: PageEntity {
                      offset:        base.offset,
                      length:        base.length,
                      isTruncated:   base.isTruncated,
-                     book:          base.objectID)
+                     book:          base.book.objectID)
     }
 }

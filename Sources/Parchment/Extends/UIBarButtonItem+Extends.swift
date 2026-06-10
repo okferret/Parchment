@@ -36,7 +36,6 @@ extension UIBarButtonItem {
     fileprivate static var stateKey: Optional<Void> = .none
 }
 
-extension UIBarButtonItem: Compatible {}
 extension CompatibleWrapper where Base: UIBarButtonItem {
     
     /// 状态

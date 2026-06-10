@@ -8,7 +8,6 @@
 #if canImport(UIKit)
 import UIKit
 
-extension UIToolbar: Compatible {}
 extension CompatibleWrapper where Base: UIToolbar {
     
     

@@ -8,6 +8,7 @@
 #if canImport(UIKit)
 
 import UIKit
+import CoreData
 
 /// ParchmentViewController
 final public class ParchmentViewController: UINavigationController {
@@ -307,22 +308,22 @@ extension ParchmentViewController {
                 hideBarAction()
             } else {
                 // 分区域
-                let leftArea: CGRect = .init(x: 0.0, y: 0.0, width: floor(view.bounds.width / 3.0), height: view.bounds.height)
-                let midArea: CGRect = .init(x: leftArea.maxX, y: 0.0, width: leftArea.width, height: view.bounds.height)
-                let rightArea: CGRect = .init(x: midArea.maxX, y: 0.0, width: view.bounds.width - midArea.maxX, height: view.bounds.height)
+                let leftArea: CGRect = .init(x: 0.0, y: 0.0, width: floor(view.bounds.width * 0.33), height: view.bounds.height)
+                let rightArea: CGRect = .init(x: view.bounds.width - leftArea.width, y: 0.0, width: leftArea.width, height: view.bounds.height)
+                let midArea: CGRect = .init(x: leftArea.maxX, y: 0.0, width: rightArea.minX - leftArea.maxX, height: view.bounds.height)
                 // 根据区域划分功能
                 switch location {
                 case _ where midArea.contains(location) == true && (isToolbarHidden == true || isNavigationBarHidden == true):
                     showBarAction()
                     
                 case _ where leftArea.contains(location) == true:
-                    if let bookWant = bookWant {
-                        backwardActionWith(bookWant)
+                    if let bookWant = bookWant, let topViewController = topViewController as? UIPageViewController {
+                        backwardWith(bookWant, pageViewController: topViewController)
                     }
                     
                 case _ where rightArea.contains(location) == true:
-                    if let bookWant = bookWant {
-                        forewardActionWith(bookWant)
+                    if let bookWant = bookWant, let topViewController = topViewController as? UIPageViewController {
+                        forewardWith(bookWant, pageViewController: topViewController)
                     }
                 default: break
                 }
@@ -330,16 +331,58 @@ extension ParchmentViewController {
         }
     }
     
-    /// forewardActionWith
-    /// - Parameter bookWant: BookEntity.Want
-    private func forewardActionWith(_ bookWant: BookEntity.Want) {
-        
+    /// 下一页
+    /// - Parameters:
+    ///   - bookWant: BookEntity.Want
+    ///   - pageViewController: UIPageViewController
+    private func forewardWith(_ bookWant: BookEntity.Want, pageViewController: UIPageViewController) {
+        switch pageViewController.transitionStyle {
+        case .scroll:
+            let newIndex: Int64 = bookWant.currentIndex + 1
+            if let newWant: PageEntity.Want = bookWant.pageAt(newIndex) {
+                let controller: ContentViewController = .init()
+                controller.reloadWith(newWant, configuration: configuration)
+                let previousViewControllers: Array<UIViewController> = pageViewController.viewControllers ?? []
+                tapGesture.isEnabled = false
+                pageViewController.setViewControllers([controller], direction: .forward, animated: true) {[weak pageViewController, weak tapGesture] finished in
+                    defer { tapGesture?.isEnabled = true }
+                    guard let pageViewController = pageViewController, finished == true else { return }
+                    pageViewController.delegate?.pageViewController?(pageViewController,
+                                                                     didFinishAnimating: true,
+                                                                     previousViewControllers: previousViewControllers,
+                                                                     transitionCompleted: true)
+                }
+            }
+            
+        default: break
+        }
     }
     
-    /// backwardActionWith
-    /// - Parameter bookWant: BookEntity.Want
-    private func backwardActionWith(_ bookWant: BookEntity.Want) {
-        
+    /// 上一页
+    /// - Parameters:
+    ///   - bookWant: BookEntity.Want
+    ///   - pageViewController: UIPageViewController
+    private func backwardWith(_ bookWant: BookEntity.Want, pageViewController: UIPageViewController) {
+        switch pageViewController.transitionStyle {
+        case .scroll:
+            let newIndex: Int64 = bookWant.currentIndex - 1
+            if let newWant: PageEntity.Want = bookWant.pageAt(newIndex) {
+                let controller: ContentViewController = .init()
+                controller.reloadWith(newWant, configuration: configuration)
+                let previousViewControllers: Array<UIViewController> = pageViewController.viewControllers ?? []
+                tapGesture.isEnabled = false
+                pageViewController.setViewControllers([controller], direction: .reverse, animated: true) {[weak pageViewController, weak tapGesture] finished in
+                    defer { tapGesture?.isEnabled = true }
+                    guard let pageViewController = pageViewController, finished == true else { return }
+                    pageViewController.delegate?.pageViewController?(pageViewController,
+                                                                     didFinishAnimating: true,
+                                                                     previousViewControllers: previousViewControllers,
+                                                                     transitionCompleted: true)
+                }
+            }
+            
+        default: break
+        }
     }
     
     /// showBarAction
@@ -398,6 +441,28 @@ extension ParchmentViewController {
 
 //  MARK: - UIPageViewControllerDelegate, UIPageViewControllerDataSource
 extension ParchmentViewController: UIPageViewControllerDelegate, UIPageViewControllerDataSource {
+    
+    /// didFinishAnimating
+    /// - Parameters:
+    ///   - pageViewController: UIPageViewController
+    ///   - finished: Bool
+    ///   - previousViewControllers: [UIViewController]
+    ///   - completed: Bool
+    public func pageViewController(_ pageViewController: UIPageViewController,
+                                   didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
+        // 更新进度
+        if completed == true, let first = pageViewController.viewControllers?.first as? ContentViewController, let pageWant = first.pageWant {
+            bookWant?.currentIndex(pageWant.index)
+            Task(priority: .userInitiated) {
+                let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
+                try context.hub.performAndWait { context in
+                    let obj: BookEntity = try context.hub.fetchAny(for: pageWant.book)
+                    obj.currentIndex = pageWant.index
+                    try context.hub.saveAndWait()
+                }
+            }
+        }
+    }
     
     /// viewControllerBefore
     /// - Parameters:

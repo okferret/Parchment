@@ -21,7 +21,14 @@ extension BookEntity {
         internal let chapters: Array<ChapterEntity.Want>
         internal let pages: Array<PageEntity.Want>
         internal let marks: Array<MarkEntity.Want>
-        internal let currentIndex: Int64
+        private(set) var currentIndex: Int64
+        internal let isReady: Bool
+        
+        /// currentIndex
+        /// - Parameter currentIndex: Int64
+        internal mutating func currentIndex(_ currentIndex: Int64) {
+            self.currentIndex = currentIndex
+        }
         
         /// page at index
         /// - Parameter index: Int64
@@ -34,7 +41,6 @@ extension BookEntity {
     }
 }
 
-extension BookEntity: Compatible {}
 extension CompatibleWrapper where Base: BookEntity {
     
     /// String.Encoding
@@ -54,7 +60,8 @@ extension CompatibleWrapper where Base: BookEntity {
                      chapters:      base.chapters.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
                      pages:         base.pages.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
                      marks:         base.marks.sorted(by: { $0.offset < $1.offset }).map(\.hub.want),
-                     currentIndex:  base.currentIndex)
+                     currentIndex:  base.currentIndex,
+                     isReady:       base.isReady)
     }
     
     /// URL

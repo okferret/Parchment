@@ -14,7 +14,6 @@ extension UIApplication {
     fileprivate static var safeAreaInsetsKey: Optional<Void> = .none
 }
 
-extension UIApplication: Compatible {}
 extension CompatibleWrapper where Base: UIApplication {
     
     /// 获取key window

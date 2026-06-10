@@ -8,7 +8,6 @@
 #if canImport(Foundation)
 import Foundation
 
-extension FileManager: Compatible {}
 extension CompatibleWrapper where Base: FileManager {
     
     /// 获取相对路径

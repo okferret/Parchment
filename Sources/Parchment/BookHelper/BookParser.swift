@@ -43,26 +43,16 @@ extension BookParser {
         let relativeUID: String = BookParser.relativeUID(for: fileURL)
         // 查询数据库 缓存
         let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
-//        let bookWant: Optional<BookEntity.Want> = try? context.hub.performAndWait({ context in
-//            let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
-//            freq.predicate = .init(format: "relativeUID == %@", relativeUID)
-//            freq.fetchLimit = 1
-//            freq.resultType = .managedObjectResultType
-//            return try context.fetch(freq).first?.hub.want
-//        })
-//        if let bookWant = bookWant {
-//            return bookWant
-//        }
-        
-                try? context.hub.performAndWait({ context in
-                    let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
-                    freq.predicate = .init(format: "relativeUID == %@", relativeUID)
-                    freq.fetchLimit = 1
-                    freq.resultType = .managedObjectResultType
-                    let objs = try context.fetch(freq)
-                    objs.forEach { context.delete($0) }
-                    try context.hub.saveAndWait()
-                })
+        let bookWant: Optional<BookEntity.Want> = try? context.hub.performAndWait({ context in
+            let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
+            freq.predicate = .init(format: "relativeUID == %@", relativeUID)
+            freq.fetchLimit = 1
+            freq.resultType = .managedObjectResultType
+            return try context.fetch(freq).first?.hub.want
+        })
+        if let bookWant = bookWant {
+            return bookWant
+        }
         // 解析数据
         let filename: String = FileManager.default.displayName(atPath: fileURL.path)
         var newText: String
@@ -129,6 +119,5 @@ extension BookParser {
         return relativePath.hub.md5
     }
 }
-
 
 #endif
