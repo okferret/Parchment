@@ -48,14 +48,20 @@ extension CompatibleWrapper where Base == String {
     }
     
     /// String
+    /// String
+    /// 规范化文本：去除每行首尾空白、过滤空行、统一换行符为 \n，末尾追加 \n。
+    /// 末尾追加 \n 确保与 ChapterParser.buildLineInfos 的输出格式一致：
+    ///   - buildLineInfos 每行末尾追加 0x0A，N 行文本产生 N 个 \n
+    ///   - cleanText 末尾追加 \n 后同样产生 N 个 \n
+    /// 两者字节偏移完全对齐，isBelongTo 判断正确。
     internal var cleanText: String {
-        return base
+        let lines = base
             .components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { $0.isEmpty == false }
-            .joined(separator: "\n")
+        guard !lines.isEmpty else { return "" }
+        return lines.joined(separator: "\n") + "\n"
     }
-    
     /// 计算字符串在指定字体下的宽度
     /// - Parameter font: UIFont
     /// - Returns: CGFloat

@@ -20,6 +20,14 @@ extension PageEntity {
         internal let length: Int64
         internal let isTruncated: Bool
         internal let book: NSManagedObjectID
+        
+        /// isBelongTo
+        /// - Parameter chapterWant: ChapterEntity.Want
+        /// - Returns: Bool
+        internal func isBelongTo(_ chapterWant: ChapterEntity.Want) -> Bool {
+            return (offset ..< offset + length).contains(chapterWant.offset) == true
+            // return (chapterWant.offset ..< chapterWant.offset + chapterWant.length).contains(offset)
+        }
     }
 }
 

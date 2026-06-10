@@ -109,6 +109,19 @@ extension BookHelper {
             }
         }
     }
+    
+    /// clean all
+    internal static func clearnAll() {
+        Task(priority: .userInitiated) {
+            let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
+            try context.hub.performAndWait { context in
+                let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
+                let objs: Array<BookEntity> = try context.fetch(freq)
+                objs.forEach { context.delete($0) }
+                try context.hub.saveAndWait()
+            }
+        }
+    }
 }
 
 extension BookHelper {

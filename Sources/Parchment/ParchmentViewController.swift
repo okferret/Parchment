@@ -176,6 +176,10 @@ final public class ParchmentViewController: UINavigationController {
         // NotificationCenter.default.addObserver(self, selector: #selector(notificaitonHandler(_:)), name: UIScreen.brightnessDidChangeNotification, object: .none)
         brightness = keyWindow?.screen.brightness ?? 0.5
         keyWindow?.screen.brightness = configuration.brightness
+        // 调试
+        #if DEBUG
+        BookHelper.clearnAll()
+        #endif
         // 解析数据
         parseWith(fileURL)
     }

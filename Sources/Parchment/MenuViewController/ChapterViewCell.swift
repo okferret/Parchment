@@ -23,6 +23,11 @@ class ChapterViewCell: UITableViewCell {
         didSet { reloadWith(newWant) }
     }
     
+    /// Bool
+    internal var isCurrentted: Bool = false {
+        didSet { rightView.isHidden = isCurrentted == false }
+    }
+    
     //  MARK: - 私有属性
     
     /// UILabel
@@ -64,7 +69,7 @@ class ChapterViewCell: UITableViewCell {
     
     /// UIStackView
     private lazy var rightView: UIStackView = {
-        let _stackView: UIStackView = .init(arrangedSubviews: [] /*[markedView, markedLabel]*/)
+        let _stackView: UIStackView = .init(arrangedSubviews: [markedView, markedLabel])
         _stackView.axis = .horizontal
         _stackView.alignment = .center
         _stackView.spacing = 4.0

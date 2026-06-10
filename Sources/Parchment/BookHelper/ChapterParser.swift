@@ -492,6 +492,14 @@ final class ChapterParser {
             let match = matches[i]
             let endByteOffset: Int64 = (i + 1 < matches.count) ? matches[i + 1].byteOffset : totalBytes
             let titleLineEnd = findLineEnd(bytes, from: Int(match.byteOffset))
+
+            // 过滤：章节标题行之后到下一章节起始之间没有任何实质内容（非空行）时，
+            // 判定该章节无正文内容，不识别为有效章节。
+            // 例如：文件末尾只有一行标题、或连续多个标题行之间无正文，均被过滤。
+            guard hasNonBlankContent(bytes, from: titleLineEnd, to: Int(endByteOffset)) else {
+                continue
+            }
+
             let sketch = makeSketchFromBytes(bytes, from: titleLineEnd, to: Int(endByteOffset), maxLen: maxLen)
             items.append(ChapterItem(
                 title: match.titleText,
@@ -500,7 +508,32 @@ final class ChapterParser {
                 sketchText: sketch
             ))
         }
+
+        // 若所有匹配均被过滤（全部无正文），退化为整体"正文"章节
+        if items.isEmpty || (items.count == 1 && items[0].title == "正文") {
+            if items.isEmpty {
+                let sketch = makeSketchFromBytes(bytes, from: 0, to: bytes.count, maxLen: maxLen)
+                return [ChapterItem(title: "正文", offset: 0, length: Int64(bytes.count), sketchText: sketch)]
+            }
+        }
         return items
+    }
+
+    /// 判断 bytes[from..<to] 区间内是否存在至少一行非空内容
+    @inline(__always)
+    private func hasNonBlankContent(_ bytes: [UInt8], from start: Int, to end: Int) -> Bool {
+        var i = start
+        while i < end {
+            // 找到当前行的结束位置
+            var lineEnd = i
+            while lineEnd < end && bytes[lineEnd] != 0x0A { lineEnd += 1 }
+            // 判断该行是否非空（复用 isLineBlank）
+            if !isLineBlank(bytes, from: i, to: lineEnd) {
+                return true
+            }
+            i = lineEnd < end ? lineEnd + 1 : end
+        }
+        return false
     }
 
     @inline(__always)
