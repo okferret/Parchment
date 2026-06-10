@@ -558,7 +558,18 @@ extension ParchmentViewController: MenuViewControllerDelegate {
     ///   - controller: MenuViewController
     ///   - newWant: ChapterEntity.Want
     internal func controller(_ controller: MenuViewController, chapterActionWith newWant: ChapterEntity.Want) {
-        Task(priority: .high) {
+        Task(priority: .userInitiated) {
+            let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
+            let pageWant: Optional<PageEntity.Want> = try context.hub.performAndWait { context in
+                let freq: NSFetchRequest<PageEntity> = PageEntity.fetchRequest()
+                freq.sortDescriptors = [.init(key: #keyPath(PageEntity.offset), ascending: false)]
+                freq.fetchLimit = 1
+                freq.predicate = .init(format: "book == %@ AND offset <= %lld", newWant.book, newWant.offset)
+                return try context.fetch(freq).first?.hub.want
+            }
+            if let pageWant = pageWant {
+                gotoPageWith(pageWant, direction: .forward, animated: false, completionHandler: .none)
+            }
             await controller.hideMenu()
             hideBarAction()
         }
