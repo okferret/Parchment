@@ -169,6 +169,13 @@ final public class ParchmentViewController: UINavigationController {
         // 解析数据
         parseWith(fileURL)
     }
+    
+    /// viewWillAppear
+    /// - Parameter animated: Bool
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        view.bringSubviewToFront(loadingView)
+    }
 
     deinit {
         NotificationCenter.default.removeObserver(self)
@@ -203,13 +210,20 @@ extension ParchmentViewController {
     
     /// parseWith
     /// - Parameter fileURL: URL
-    private func parseWith(_ fileURL: URL) {
+    private func parseWith(_ fileURL: URL, useCached: Bool = true) {
         guard let keyWindow = UIApplication.shared.hub.keyWindow else { return }
         let safeAreaInsets: UIEdgeInsets = BookHelper.safeAreaInsets
         let safeArea: CGSize = keyWindow.bounds.inset(by: safeAreaInsets).size
-        Task(priority: .userInitiated) {
+        Task(priority: .high) {
+            let start = CACurrentMediaTime()
+            defer {
+                let end = CACurrentMediaTime()
+                print("end - start =>", end - start)
+            }
             do {
-                let newWant: BookEntity.Want = try await BookHelper.shared.parseWith(fileURL, safeArea: safeArea, textAttributes: configuration.textAttributes)
+                let newWant: BookEntity.Want = try await BookHelper.shared.parseWith(fileURL,
+                                                                                     safeArea: safeArea,
+                                                                                     textAttributes: configuration.textAttributes, useCached: useCached)
                 self.bookWant = newWant
                 menuController.reloadWith(newWant)
                 if let topViewController = topViewController as? UIPageViewController, let pageWant: PageEntity.Want = newWant.pageAt(.none) {
@@ -453,7 +467,7 @@ extension ParchmentViewController: UIPageViewControllerDelegate, UIPageViewContr
         // 更新进度
         if completed == true, let first = pageViewController.viewControllers?.first as? ContentViewController, let pageWant = first.pageWant {
             bookWant?.completedUnitCount(pageWant.index)
-            Task(priority: .userInitiated) {
+            Task(priority: .utility) {
                 let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
                 try context.hub.performAndWait { context in
                     let obj: BookEntity = try context.hub.fetchAny(for: pageWant.book)
@@ -562,6 +576,8 @@ extension ParchmentViewController: MenuViewControllerDelegate {
     internal func controller(_ controller: MenuViewController, fontActionWith uiFont: UIFont) {
         guard configuration.font.fontName != uiFont.fontName || configuration.font.pointSize != uiFont.pointSize else { return }
         configuration.changeWith(uiFont)
+        // 分页
+        parseWith(fileURL, useCached: false)
     }
     
     /// themeActionWith

@@ -136,6 +136,7 @@ final public class Configuration: NSObject {
     /// - Parameter newValue: UIFont
     internal func changeWith(_ newValue: UIFont) {
         guard font.fontName != newValue.fontName || font.pointSize != newValue.pointSize else { return }
+        font = newValue
         let fontText: String = "\(newValue.fontName)<|>\(newValue.pointSize)"
         userDefaults.set(fontText, forKey: UserDefaultsKey.font.rawValue)
         userDefaults.synchronize()

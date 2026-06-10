@@ -125,10 +125,10 @@ extension BookHelper {
                             safeArea: CGSize,
                             textAttributes: Dictionary<NSAttributedString.Key, Any>, useCached: Bool = true) async throws -> BookEntity.Want {
         let bookWant: BookEntity.Want = try await BookParser.parseWith(fileURL, encoding: encoding)
-        if useCached == true, bookWant.isReady == true {
-            return bookWant
-        } else {
+        if useCached == false || bookWant.isReady == false {
             return try await paginateWith(bookWant, safeArea: safeArea, textAttributes: textAttributes)
+        } else {
+            return bookWant
         }
     }
     
@@ -141,6 +141,14 @@ extension BookHelper {
     private func paginateWith(_ bookWant: BookEntity.Want,
                               safeArea: CGSize,
                               textAttributes: Dictionary<NSAttributedString.Key, Any>) async throws -> BookEntity.Want {
+        // 获取当前偏移量
+        let offset: Int64
+        if (0 ..< bookWant.pages.count).contains(Int(bookWant.completedUnitCount)) == true {
+            let newWant: PageEntity.Want = bookWant.pages[Int(bookWant.completedUnitCount)]
+            offset = newWant.offset
+        } else {
+            offset = 0
+        }
         // 读取数据
         let newText: String = try .init(contentsOf: bookWant.cacheURL, encoding: bookWant.encoding)
         // 执行分页
@@ -153,7 +161,8 @@ extension BookHelper {
             bookObj.pages.forEach { context.delete($0) }
             bookObj.pages = []
             bookObj.isReady = false
-            newArray.sorted(by: { $0.offset < $1.offset }).enumerated().forEach { (index, element) in
+            let enumerated = newArray.sorted(by: { $0.offset < $1.offset }).enumerated()
+            enumerated.forEach { (index, element) in
                 let obj: PageEntity = .init(context: context)
                 obj.index   = Int64(index)
                 obj.offset  = element.offset
@@ -165,6 +174,8 @@ extension BookHelper {
             }
             bookObj.totalUnitCount = Int64(newArray.count)
             bookObj.isReady = true
+            bookObj.completedUnitCount = Int64(enumerated.first(where: { $0.element.offset >= offset })?.offset ?? 0)
+            bookObj.totalUnitCount = Int64(enumerated.count)
             try context.obtainPermanentIDs(for: Array(bookObj.pages))
             try context.hub.saveAndWait()
             return bookObj.hub.want
