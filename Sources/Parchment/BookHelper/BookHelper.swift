@@ -102,11 +102,18 @@ extension BookHelper {
         }
     }
     
+    /// relativeUID for
+    /// - Parameter fileURL: URL
+    /// - Returns: String
+    public static func relativeUID(for fileURL: URL) -> String {
+        return FileManager.default.hub.relativePath(for: fileURL).hub.md5
+    }
+    
     /// cleanWith
     /// - Parameter fileURL: URL
     public static func cleanWith(_ fileURL: URL) {
         Task(priority: .userInitiated) {
-            let relativeUID: String = FileManager.default.hub.relativePath(for: fileURL).hub.md5
+            let relativeUID: String = BookHelper.relativeUID(for: fileURL)
             let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
             try context.hub.performAndWait { context in
                 let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
@@ -226,6 +233,7 @@ extension BookHelper {
     
     /// BookHelper.progressNotification
     internal static let progressNotification: Notification.Name  = .init(rawValue: "BookHelper.progressNotification")
+    
 }
 
 

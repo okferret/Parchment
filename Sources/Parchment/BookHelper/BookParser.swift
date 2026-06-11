@@ -40,7 +40,7 @@ extension BookParser {
         guard FileManager.default.fileExists(atPath: fileURL.path, isDirectory: &isDir) == true && isDir.boolValue == false else {
             throw PAError.customWith("不支持当前文件")
         }
-        let relativeUID: String = FileManager.default.hub.relativePath(for: fileURL).hub.md5
+        let relativeUID: String = BookHelper.relativeUID(for: fileURL)
         // 查询数据库 缓存
         let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
         let bookWant: Optional<BookEntity.Want> = try? context.hub.performAndWait({ context in

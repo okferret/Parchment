@@ -701,7 +701,7 @@ extension ParchmentViewController: MenuViewControllerDelegate {
         parseWith(fileURL, useCached: false)
         // 同步其他书籍
         Task(priority: .userInitiated) {
-            let relativeUID: String = FileManager.default.hub.relativePath(for: fileURL).hub.md5
+            let relativeUID: String = BookHelper.relativeUID(for: fileURL)
             let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
             try context.hub.performAndWait { context in
                 let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
