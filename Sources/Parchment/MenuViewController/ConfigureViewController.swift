@@ -71,7 +71,7 @@ class ConfigureViewController: UIViewController, MenuContentController {
     /// 亮度
     private lazy var brightView: UISliderView = {
         let _sliderView: UISliderView = .init(frame: .zero)
-        _sliderView.isContinuous = false
+        _sliderView.isContinuous = true
         _sliderView.layer.cornerRadius = 14.0
         _sliderView.layer.masksToBounds = true
         _sliderView.translatesAutoresizingMaskIntoConstraints = false
