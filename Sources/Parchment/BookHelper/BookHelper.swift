@@ -86,12 +86,18 @@ extension BookHelper {
     
     /// newBackgroundContext
     /// - Returns: NSManagedObjectContext
-    internal static func newBackgroundContext() -> NSManagedObjectContext {
+    public static func newBackgroundContext() -> NSManagedObjectContext {
         let context: NSManagedObjectContext = .init(concurrencyType: .privateQueueConcurrencyType)
         context.parent = BookHelper.shared.container.viewContext
         context.automaticallyMergesChangesFromParent = true
         context.mergePolicy = NSMergePolicy.mergeByPropertyObjectTrump
         return context
+    }
+    
+    /// performAndWait
+    /// - Parameter block: @escaping (_ context: NSManagedObjectContext) -> Void
+    public static func performAndWait(_ block: @escaping (_ context: NSManagedObjectContext) -> Void) {
+        block(BookHelper.newBackgroundContext())
     }
     
     /// cleanWith
@@ -219,5 +225,7 @@ extension BookHelper {
     /// BookHelper.progressNotification
     internal static let progressNotification: Notification.Name  = .init(rawValue: "BookHelper.progressNotification")
 }
+
+
 
 #endif

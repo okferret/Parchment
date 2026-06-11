@@ -13,7 +13,6 @@ extension DateFormatter {
     internal static let shared: DateFormatter = .init()
 }
 
-extension DateFormatter: Compatible {}
 extension CompatibleWrapper where Base: DateFormatter {
     
     

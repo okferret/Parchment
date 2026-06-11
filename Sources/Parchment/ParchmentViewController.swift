@@ -409,7 +409,7 @@ extension ParchmentViewController {
         let controller: ContentViewController = .init()
         controller.reloadWith(pageWant, configuration: configuration)
         let previousViewControllers: Array<UIViewController> = pageViewController.viewControllers ?? []
-        pageViewController.setViewControllers([controller], direction: direction, animated: animated) {[weak pageViewController, weak tapGesture] finished in
+        pageViewController.setViewControllers([controller], direction: direction, animated: animated) {[weak pageViewController] finished in
             defer { completionHandler?() }
             guard let pageViewController = pageViewController else { return }
             pageViewController.delegate?.pageViewController?(pageViewController,  didFinishAnimating: true,
@@ -561,7 +561,6 @@ extension ParchmentViewController: UIPageViewControllerDelegate, UIPageViewContr
         else { return .none }
         let newIndex: Int64 = pageWant.index - 1
         guard let newWant: PageEntity.Want = bookWant?.pageAt(newIndex) else { return .none }
-        let safeAreaInsets: UIEdgeInsets = BookHelper.safeAreaInsets
         let controller: ContentViewController = .init()
         controller.reloadWith(newWant, configuration: configuration)
         return controller
@@ -580,7 +579,6 @@ extension ParchmentViewController: UIPageViewControllerDelegate, UIPageViewContr
         else { return .none }
         let newIndex: Int64 = pageWant.index + 1
         guard let newWant: PageEntity.Want = bookWant.pageAt(newIndex) else { return .none }
-        let safeAreaInsets: UIEdgeInsets = BookHelper.safeAreaInsets
         let controller: ContentViewController = .init()
         controller.reloadWith(newWant, configuration: configuration)
         return controller
