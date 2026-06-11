@@ -96,8 +96,10 @@ extension BookHelper {
     
     /// performAndWait
     /// - Parameter block: @escaping (_ context: NSManagedObjectContext) -> Void
-    public static func performAndWait(_ block: @escaping (_ context: NSManagedObjectContext) -> Void) {
-        block(BookHelper.newBackgroundContext())
+    public static func performAndWait(_ block: @escaping (_ context: NSManagedObjectContext) throws -> Void) throws {
+        try BookHelper.newBackgroundContext().hub.performAndWait { context in
+           try block(context)
+        }
     }
     
     /// cleanWith
