@@ -32,7 +32,7 @@ final public class Configuration: NSObject {
     private(set) var navigationOrientation: NavigationOrientation = .horizontal
     private(set) var theme: Theme = .paleMint
     private(set) var brightness: CGFloat = 0.5
-    private(set) var font: UIFont = .pingfangSC(ofSize: 16.0)
+    private(set) var font: UIFont = .pingfangSC(ofSize: 20.0)
     
     /// NSMutableParagraphStyle
     internal var paragraphStyle: NSMutableParagraphStyle {
@@ -43,7 +43,7 @@ final public class Configuration: NSObject {
     }
     
     /// Dictionary<NSAttributedString.Key, Any>
-    internal var textAttributes: Dictionary<NSAttributedString.Key, Any> {
+    public var textAttributes: Dictionary<NSAttributedString.Key, Any> {
         return [.font: font, .foregroundColor: theme.primaryText, .paragraphStyle: paragraphStyle]
     }
     
@@ -87,12 +87,12 @@ final public class Configuration: NSObject {
             let cmpts: Array<String> = fontText.components(separatedBy: "<|>")
             if cmpts.count == 2, let nameText = cmpts.first, let sizeText = cmpts.last {
                 let fontSize = CGFloat((sizeText as NSString).floatValue)
-                self.font = .init(name: nameText, size: fontSize) ?? .pingfangSC(ofSize: 16.0)
+                self.font = .init(name: nameText, size: fontSize) ?? .pingfangSC(ofSize: 20.0)
             } else {
-                self.font = .pingfangSC(ofSize: 16.0)
+                self.font = .pingfangSC(ofSize: 20.0)
             }
         } else {
-            self.font = .pingfangSC(ofSize: 16.0)
+            self.font = .pingfangSC(ofSize: 20.0)
         }
     }
     

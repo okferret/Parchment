@@ -35,6 +35,16 @@ extension BookParser {
     ///   - fileURL: URL
     /// - Returns: BookEntity.Want
     internal static func parseWith(_ fileURL: URL, encoding: Optional<String.Encoding> = .none) async throws -> BookEntity.Want {
+        return try await Task<BookEntity.Want, Error>(priority: .userInitiated) {
+            return try BookParser.parseWith(fileURL, encoding: encoding)
+        }.value
+    }
+    
+    /// 解析内容
+    /// - Parameters:
+    ///   - fileURL: URL
+    /// - Returns: BookEntity.Want
+    internal static func parseWith(_ fileURL: URL, encoding: Optional<String.Encoding> = .none) throws -> BookEntity.Want {
         guard fileURL.isFileURL == true else { throw PAError.customWith("不支持当前存储路径") }
         var isDir: ObjCBool = .init(false)
         guard FileManager.default.fileExists(atPath: fileURL.path, isDirectory: &isDir) == true && isDir.boolValue == false else {

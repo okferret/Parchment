@@ -232,7 +232,7 @@ extension ParchmentViewController {
     ///   - useCached: Bool
     ///   - priority: TaskPriority
     private func parseWith(_ fileURL: URL, useCached: Bool = true, priority: TaskPriority = .userInitiated) {
-        Task(priority: priority) {
+        Task<Void, Error>(priority: priority) {
             guard let keyWindow = UIApplication.shared.hub.keyWindow else { return }
             let safeAreaInsets: UIEdgeInsets = BookHelper.safeAreaInsets
             let safeArea: CGSize = keyWindow.bounds.inset(by: safeAreaInsets).size

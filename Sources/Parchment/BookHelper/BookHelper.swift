@@ -24,13 +24,15 @@ public class BookHelper: NSObject {
     }
     
     /// UIEdgeInsets
-    internal static var safeAreaInsets: UIEdgeInsets {
-        guard let keyWindow = UIApplication.shared.hub.keyWindow else { return .zero }
-        let safeAreaInsets: UIEdgeInsets = .init(top:       max(keyWindow.safeAreaInsets.top, 32.0),
-                                                 left:      max(keyWindow.safeAreaInsets.left, 16.0),
-                                                 bottom:    max(keyWindow.safeAreaInsets.bottom, 32.0),
-                                                 right:     max(keyWindow.safeAreaInsets.right, 16.0))
-        return safeAreaInsets
+    public static var safeAreaInsets: UIEdgeInsets {
+        if let keyWindow = UIApplication.shared.hub.keyWindow {
+            return .init(top:       max(keyWindow.safeAreaInsets.top, 47.0),
+                         left:      max(keyWindow.safeAreaInsets.left, 16.0),
+                         bottom:    max(keyWindow.safeAreaInsets.bottom, 34.0),
+                         right:     max(keyWindow.safeAreaInsets.right, 16.0))
+        } else {
+            return .init(top: 47.0, left: 16.0, bottom: 34.0, right: 16.0)
+        }
     }
     
     //  MARK: - 私有属性
@@ -96,9 +98,9 @@ extension BookHelper {
     
     /// performAndWait
     /// - Parameter block: @escaping (_ context: NSManagedObjectContext) -> Void
-    public static func performAndWait(_ block: @escaping (_ context: NSManagedObjectContext) throws -> Void) throws {
-        try BookHelper.newBackgroundContext().hub.performAndWait { context in
-           try block(context)
+    public static func performAndWait<T>(_ block: @escaping (_ context: NSManagedObjectContext) throws -> T) throws -> T {
+        return try BookHelper.newBackgroundContext().hub.performAndWait { context in
+            return try block(context)
         }
     }
     
@@ -109,10 +111,18 @@ extension BookHelper {
         return FileManager.default.hub.relativePath(for: fileURL).hub.md5
     }
     
+    /// 解析内容
+    /// - Parameters:
+    ///   - fileURL: URL
+    /// - Returns: BookEntity.Want
+    public static func parseWith(_ fileURL: URL, encoding: Optional<String.Encoding> = .none) throws -> BookEntity.Want {
+        return try BookParser.parseWith(fileURL, encoding: encoding)
+    }
+    
     /// cleanWith
     /// - Parameter fileURL: URL
     public static func cleanWith(_ fileURL: URL) {
-        Task(priority: .userInitiated) {
+        Task<Void, Error>(priority: .userInitiated) {
             let relativeUID: String = BookHelper.relativeUID(for: fileURL)
             let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
             try context.hub.performAndWait { context in
@@ -126,8 +136,8 @@ extension BookHelper {
     }
     
     /// clean all
-    internal static func clearnAll() {
-        Task(priority: .userInitiated) {
+    public static func clearAll() {
+        Task<Void, Error>(priority: .userInitiated) {
             let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
             try context.hub.performAndWait { context in
                 let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
@@ -153,12 +163,14 @@ extension BookHelper {
                             safeArea: CGSize,
                             textAttributes: Dictionary<NSAttributedString.Key, Any>,
                             useCached: Bool = true) async throws -> BookEntity.Want {
-        let bookWant: BookEntity.Want = try await BookParser.parseWith(fileURL, encoding: encoding)
-        if useCached == false || bookWant.isReady == false {
-            return try await paginateWith(bookWant, safeArea: safeArea, textAttributes: textAttributes)
-        } else {
-            return bookWant
-        }
+        return try await Task<BookEntity.Want, Error>(priority: .userInitiated) {
+            let bookWant: BookEntity.Want = try await BookParser.parseWith(fileURL, encoding: encoding)
+            if useCached == false || bookWant.isReady == false {
+                return try paginateWith(bookWant, safeArea: safeArea, textAttributes: textAttributes)
+            } else {
+                return bookWant
+            }
+        }.value
     }
     
     /// parseWith
@@ -180,12 +192,24 @@ extension BookHelper {
     /// paginateWith
     /// - Parameters:
     ///   - bookWant: BookEntity.Want
+    ///   - safeArea: CGSize
+    ///   - textAttributes: Dictionary<NSAttributedString.Key, Any>
+    /// - Returns: Entity.Want
+    public static func paginateWith(_ bookWant: BookEntity.Want,
+                                    safeArea: CGSize,
+                                    textAttributes: Dictionary<NSAttributedString.Key, Any>) throws -> BookEntity.Want {
+        return try BookHelper.shared.paginateWith(bookWant, safeArea: safeArea, textAttributes: textAttributes)
+    }
+    
+    /// paginateWith
+    /// - Parameters:
+    ///   - bookWant: BookEntity.Want
     ///   - safeAreaInsets: UIEdgeInsets
     ///   - textAttributes: BookEntity.Want
     /// - Returns: Dictionary<NSAttributedString.Key, Any>
     private func paginateWith(_ bookWant: BookEntity.Want,
                               safeArea: CGSize,
-                              textAttributes: Dictionary<NSAttributedString.Key, Any>) async throws -> BookEntity.Want {
+                              textAttributes: Dictionary<NSAttributedString.Key, Any>) throws -> BookEntity.Want {
         // 获取当前偏移量
         let offset: Int64
         if let newWant: PageEntity.Want = bookWant.pageAt(bookWant.currentIndex) {

@@ -23,13 +23,13 @@ extension BookEntity {
 extension BookEntity {
     
     /// Want
-    class Want: NSObject {
-        internal let objectID: NSManagedObjectID
-        internal let relativeUID: String
-        internal let relativePath: String
-        internal let filename: String
-        internal let encoding: String.Encoding
-        internal let cacheURL: URL
+    public class Want: NSObject {
+        public let objectID: NSManagedObjectID
+        public let relativeUID: String
+        public let relativePath: String
+        public let filename: String
+        public let encoding: String.Encoding
+        public let cacheURL: URL
         private(set) var chapters: Set<NSManagedObjectID>
         private(set) var pages: Set<NSManagedObjectID>
         private(set) var marks: Set<NSManagedObjectID>
