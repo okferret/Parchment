@@ -25,13 +25,17 @@ public class BookHelper: NSObject {
     
     /// UIEdgeInsets
     public static var safeAreaInsets: UIEdgeInsets {
-        if let keyWindow = UIApplication.shared.hub.keyWindow {
-            return .init(top:       max(keyWindow.safeAreaInsets.top, 47.0),
-                         left:      max(keyWindow.safeAreaInsets.left, 16.0),
-                         bottom:    max(keyWindow.safeAreaInsets.bottom, 34.0),
-                         right:     max(keyWindow.safeAreaInsets.right, 16.0))
+        if Thread.isMainThread == true {
+            if let keyWindow = UIApplication.shared.hub.keyWindow {
+                return .init(top:       max(keyWindow.safeAreaInsets.top, 47.0),
+                             left:      max(keyWindow.safeAreaInsets.left, 16.0),
+                             bottom:    max(keyWindow.safeAreaInsets.bottom, 34.0),
+                             right:     max(keyWindow.safeAreaInsets.right, 16.0))
+            } else {
+                return .init(top: 47.0, left: 16.0, bottom: 34.0, right: 16.0)
+            }
         } else {
-            return .init(top: 47.0, left: 16.0, bottom: 34.0, right: 16.0)
+            return DispatchQueue.main.sync { BookHelper.safeAreaInsets }
         }
     }
     
