@@ -91,13 +91,15 @@ final class TextPaginator {
     /// - Parameters:
     ///   - text: 待分页的原始文本
     ///   - textAttributes: 可选的文本排版属性字典，若提供则覆盖 Configuration 中的字体/段落样式
-    /// - Returns: 每页信息数组 `[(text, offset, length, isTruncated)]`
-    ///   - `text`        : 该页的文本内容（原样保留所有空格、换行、缩进字符）
+    /// - Returns: 每页信息数组 `[(offset, length, isTruncated)]`
     ///   - `offset`      : 该页在原始 UTF-8 字节流中的起始偏移
     ///   - `length`      : 该页在原始 UTF-8 字节流中的字节长度
     ///   - `isTruncated` : 该页第一行是否是被截断的（即上一页末尾行在本页延续）；
     ///                     第一页始终为 `false`，后续页若上一页末尾字符不是换行符则为 `true`
-    func paginate(text: String, textAttributes: [NSAttributedString.Key: Any]? = nil) -> [(text: String, offset: Int64, length: Int64, isTruncated: Bool)] {
+    ///
+    /// 注意：本方法**不再返回每页文本内容**。页文本可由调用方依据 `offset`/`length`
+    /// 从对应的 UTF-8 编码文件中按字节切片还原，避免在数据库中冗余存储全文。
+    func paginate(text: String, textAttributes: [NSAttributedString.Key: Any]? = nil) -> [(offset: Int64, length: Int64, isTruncated: Bool)] {
         // 1. 构建带排版属性的 NSAttributedString（一次性，整个分页过程复用）
         let attrString = buildAttributedString(from: text, overrideAttributes: textAttributes)
         let totalUTF16 = attrString.length
@@ -408,20 +410,12 @@ final class TextPaginator {
         slices: [PageSlice],
         totalUTF8Bytes: Int64,
         nsText: NSString
-    ) -> [(text: String, offset: Int64, length: Int64, isTruncated: Bool)] {
+    ) -> [(offset: Int64, length: Int64, isTruncated: Bool)] {
         guard !slices.isEmpty else { return [] }
         
-        let totalUTF16 = nsText.length
-        
-        // 强制连续切片：第 i 页的实际长度 = 第 i+1 页起点 - 第 i 页起点，
-        // 确保所有字符（包括空行、行首空格、全角空格等）完整保留，无遗漏无重叠。
+        // 不再切片生成每页文本：页文本由调用方按 offset/length 从 UTF-8 文件还原。
         return slices.indices.map { i in
-            let slice     = slices[i]
-            let nextStart = i + 1 < slices.count ? slices[i + 1].utf16Location : totalUTF16
-            let length    = max(0, nextStart - slice.utf16Location)
-            
-            let pageText = nsText.substring(with: NSRange(location: slice.utf16Location,
-                                                          length:   length))
+            let slice = slices[i]
             
             // utf8Length 同步修正：使用连续切片对应的实际字节长度。
             // 最后一页的 utf8End 使用 totalUTF8Bytes（offsetMap 哨兵值），
@@ -453,7 +447,7 @@ final class TextPaginator {
                 }
             }
             
-            return (text: pageText, offset: slice.utf8Offset,
+            return (offset: slice.utf8Offset,
                     length: utf8End - slice.utf8Offset,
                     isTruncated: isTruncated)
         }
@@ -473,10 +467,10 @@ extension TextPaginator {
     ///     `kCTParagraphStyleAttributeName` 等 CoreText 属性键；
     ///     若字典非空，将直接用于分页计算（分页字体由字典中的 `kCTFontAttributeName` 决定）；
     ///     若字典为空，则使用默认字体（PingFangSC-Regular 17pt）和默认段落样式
-    /// - Returns: 每页信息数组 `[(text, offset, length, isTruncated)]`
+    /// - Returns: 每页信息数组 `[(offset, length, isTruncated)]`
     static func paginate(text: String,
                          safeArea: CGSize,
-                         textAttributes: [NSAttributedString.Key: Any]) -> [(text: String, offset: Int64, length: Int64, isTruncated: Bool)] {
+                         textAttributes: [NSAttributedString.Key: Any]) -> [(offset: Int64, length: Int64, isTruncated: Bool)] {
         let configuration: Configuration = Configuration(pageSize: safeArea)
         return TextPaginator(configuration: configuration).paginate(text: text, textAttributes: textAttributes.isEmpty ? nil : textAttributes)
     }

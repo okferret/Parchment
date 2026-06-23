@@ -75,9 +75,11 @@ extension ContentViewController {
         self.pageWant = pageWant
         self.configuration = configuration
         if let pageWant = pageWant {
+            // pageWant.text 为按需读取文件的计算属性，取一次到局部变量避免重复 IO
+            let pageText: String = pageWant.text
             if pageWant.isTruncated == true {
-                let newText: NSMutableAttributedString = .init(string: pageWant.text, attributes: configuration.textAttributes)
-                if let lineText: String = pageWant.text.components(separatedBy: .newlines).first {
+                let newText: NSMutableAttributedString = .init(string: pageText, attributes: configuration.textAttributes)
+                if let lineText: String = pageText.components(separatedBy: .newlines).first {
                     let range: NSRange = .init(lineText.startIndex..., in: lineText)
                     newText.removeAttribute(.paragraphStyle, range: range)
                     // 使用 mutableCopy 创建副本，避免修改共享的 configuration.paragraphStyle
@@ -88,7 +90,7 @@ extension ContentViewController {
                 self.contentView.attributedText = newText
             } else {
                 
-                self.contentView.attributedText = .init(string: pageWant.text, attributes: configuration.textAttributes)
+                self.contentView.attributedText = .init(string: pageText, attributes: configuration.textAttributes)
             }
   
         } else {

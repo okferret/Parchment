@@ -283,7 +283,9 @@ extension ParchmentViewController {
                     obj.offset = pageWant.offset
                     obj.length = pageWant.length
                     obj.createdAt = .init()
-                    obj.sketchText = String(pageWant.text.prefix(100)).components(separatedBy: .newlines).joined()
+                    // pageWant.text 为按需读取文件的计算属性，取一次到局部变量
+                    let pageText: String = pageWant.text
+                    obj.sketchText = String(pageText.prefix(100)).components(separatedBy: .newlines).joined()
                     try context.hub.saveAndWait()
                 }
                 // UI 更新切回主线程

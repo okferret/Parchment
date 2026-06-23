@@ -252,7 +252,6 @@ extension BookHelper {
                 obj.index   = Int64(index)
                 obj.offset  = element.offset
                 obj.length  = element.length
-                obj.text    = element.text
                 obj.isTruncated = element.isTruncated
                 bookObj.addToPages(obj)
             }
