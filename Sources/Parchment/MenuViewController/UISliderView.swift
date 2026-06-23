@@ -72,32 +72,34 @@ class UISliderView: UISlider {
     
     /// Optional<String>
     internal var minimumValueText: Optional<String> {
-        get { minimumValueLabel.text }
+        get { minimumValueButton.currentTitle }
         set {
-            minimumValueLabel.text = newValue
-            minimumValueLabel.isHidden = (newValue == .none || newValue?.isEmpty == true || minimumValueImage != .none)
+            minimumValueButton.setTitle(newValue, for: .normal)
+            minimumValueButton.sizeToFit()
+            maximumValueButton.isHidden = (newValue == .none || newValue?.isEmpty == true) && maximumValueImage == .none
         }
     }
     
     /// Optional<String>
     internal var maximumValueText: Optional<String> {
-        get { maximumValueLabel.text }
+        get { maximumValueButton.currentTitle }
         set {
-            maximumValueLabel.text = newValue
-            maximumValueLabel.isHidden = (newValue == .none || newValue?.isEmpty == true || maximumValueImage != .none)
+            maximumValueButton.setTitle(newValue, for: .normal)
+            maximumValueButton.sizeToFit()
+            maximumValueButton.isHidden = (newValue == .none || newValue?.isEmpty == true) && maximumValueImage == .none
         }
     }
     
     /// UIColor
     internal var minimumValueTextColor: UIColor {
-        get { minimumValueLabel.textColor }
-        set { minimumValueLabel.textColor = newValue }
+        get { minimumValueButton.currentTitleColor }
+        set { minimumValueButton.setTitleColor(newValue, for: .normal) }
     }
     
     /// UIColor
     internal var maximumValueTextColor: UIColor {
-        get { maximumValueLabel.textColor }
-        set { maximumValueLabel.textColor = newValue }
+        get { maximumValueButton.currentTitleColor }
+        set { maximumValueButton.setTitleColor(newValue, for: .normal) }
     }
     
     /// UIColor
@@ -107,15 +109,15 @@ class UISliderView: UISlider {
     }
     
     /// UIFont
-    internal var minimumValueTextFont: UIFont {
-        get { minimumValueLabel.font }
-        set { minimumValueLabel.font = newValue }
+    internal var minimumValueTextFont: Optional<UIFont> {
+        get { minimumValueButton.titleLabel?.font }
+        set { minimumValueButton.titleLabel?.font = newValue }
     }
     
     /// UIFont
-    internal var maximumValueTextFont: UIFont {
-        get { maximumValueLabel.font }
-        set { maximumValueLabel.font = newValue }
+    internal var maximumValueTextFont: Optional<UIFont> {
+        get { maximumValueButton.titleLabel?.font }
+        set { maximumValueButton.titleLabel?.font = newValue }
     }
     
     /// UIFont
@@ -126,75 +128,57 @@ class UISliderView: UISlider {
     
     /// Optional<UIImage>
     internal override var minimumValueImage: Optional<UIImage> {
-        get { minimumValueImageView.image }
+        get { minimumValueButton.currentImage }
         set {
-            minimumValueImageView.image = newValue
-            minimumValueImageView.sizeToFit()
-            minimumValueImageView.isHidden = newValue == .none
-            minimumValueLabel.isHidden = newValue != .none
+            minimumValueButton.setImage(newValue, for: .normal)
+            minimumValueButton.isHidden = newValue == .none && (minimumValueText == .none || minimumValueText?.isEmpty == true)
         }
     }
     
     /// UIColor
     internal var minimumValueImageTintColor: UIColor {
-        get { minimumValueImageView.tintColor }
-        set { minimumValueImageView.tintColor = newValue }
+        get { minimumValueButton.imageView?.tintColor ?? .clear }
+        set { minimumValueButton.imageView?.tintColor = newValue }
     }
     
     /// Optional<UIImage>
     internal override var maximumValueImage: Optional<UIImage> {
-        get { maximumValueImageView.image }
+        get { maximumValueButton.currentImage }
         set {
-            maximumValueImageView.image = newValue
-            maximumValueImageView.sizeToFit()
-            maximumValueImageView.isHidden = newValue == .none
-            maximumValueLabel.isHidden = newValue != .none
+            maximumValueButton.setImage(newValue, for: .normal)
+            maximumValueButton.isHidden = newValue == .none && (minimumValueText == .none || minimumValueText?.isEmpty == true)
         }
     }
     /// UIColor
     internal var maximumValueImageTintColor: UIColor {
-        get { maximumValueImageView.tintColor }
-        set { maximumValueImageView.tintColor = newValue }
+        get { maximumValueButton.imageView?.tintColor ?? .clear }
+        set { maximumValueButton.imageView?.tintColor = newValue }
     }
     
     //  MARK: - 私有属性
     
-    /// UIImageView
-    private lazy var minimumValueImageView: UIImageView = {
-        let _imgView: UIImageView = .init(frame: .zero)
-        _imgView.translatesAutoresizingMaskIntoConstraints = false
-        _imgView.isHidden = true
-        return _imgView
+    /// button of minimumValue
+    private lazy var minimumValueButton: UIButton = {
+        let _button: UIButton = .init(type: .custom)
+        _button.titleLabel?.font = .systemFont(ofSize: 12.0, weight: .regular)
+        _button.translatesAutoresizingMaskIntoConstraints = false
+        _button.contentHorizontalAlignment = .left
+        _button.isUserInteractionEnabled = false
+        _button.backgroundColor = .clear
+        _button.contentEdgeInsets = .zero
+        return _button
     }()
     
-    /// UIImageView
-    private lazy var maximumValueImageView: UIImageView = {
-        let _imgView: UIImageView = .init(frame: .zero)
-        _imgView.translatesAutoresizingMaskIntoConstraints = false
-        _imgView.isHidden = true
-        return _imgView
-    }()
-    
-    /// UILabel
-    private lazy var minimumValueLabel: UILabel = {
-        let _label: UILabel = .init(frame: .zero)
-        _label.font = .systemFont(ofSize: 14.0)
-        _label.textColor = .systemGray
-        _label.translatesAutoresizingMaskIntoConstraints = false
-        _label.textAlignment = .left
-        _label.isHidden = true
-        return _label
-    }()
-    
-    /// UILabel
-    private lazy var maximumValueLabel: UILabel = {
-        let _label: UILabel = .init(frame: .zero)
-        _label.font = .systemFont(ofSize: 14.0)
-        _label.textColor = .systemGray
-        _label.translatesAutoresizingMaskIntoConstraints = false
-        _label.textAlignment = .right
-        _label.isHidden = true
-        return _label
+    /// button of maximumValue
+    private lazy var maximumValueButton: UIButton = {
+        let _button: UIButton = .init(type: .custom)
+        _button.titleLabel?.font = .systemFont(ofSize: 12.0, weight: .regular)
+        _button.translatesAutoresizingMaskIntoConstraints = false
+        _button.contentHorizontalAlignment = .right
+        _button.isUserInteractionEnabled = false
+        _button.backgroundColor = .clear
+        _button.contentEdgeInsets = .zero
+        return _button
     }()
     
     /// track label
@@ -312,16 +296,10 @@ class UISliderView: UISlider {
     /// updateConstraints
     internal override func updateConstraints() {
         defer { super.updateConstraints() }
-        if let leftAnchor = constraints.first(where: { $0.hub.firstItem() == minimumValueLabel && $0.firstAttribute == .left }) {
+        if let leftAnchor = constraints.first(where: { $0.hub.firstItem() == minimumValueButton && $0.firstAttribute == .left }) {
             leftAnchor.constant = edgeInsets.left
         }
-        if let leftAnchor = constraints.first(where: { $0.hub.firstItem() == minimumValueImageView && $0.firstAttribute == .left }) {
-            leftAnchor.constant = edgeInsets.left
-        }
-        if let rightAnchor = constraints.first(where: { $0.hub.firstItem() == maximumValueLabel && $0.firstAttribute == .right }) {
-            rightAnchor.constant = -edgeInsets.right
-        }
-        if let rightAnchor = constraints.first(where: { $0.hub.firstItem() == maximumValueImageView && $0.firstAttribute == .right }) {
+        if let rightAnchor = constraints.first(where: { $0.hub.firstItem() == maximumValueButton && $0.firstAttribute == .right }) {
             rightAnchor.constant = -edgeInsets.right
         }
     }
@@ -347,28 +325,16 @@ extension UISliderView {
             minTrackView.widthAnchor.constraint(equalToConstant: 0.0),
         ])
         
-        insertSubview(minimumValueLabel, aboveSubview: minTrackView)
+        insertSubview(minimumValueButton, aboveSubview: minTrackView)
         NSLayoutConstraint.activate([
-            minimumValueLabel.leftAnchor.constraint(equalTo: leftAnchor, constant: edgeInsets.left),
-            minimumValueLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
+            minimumValueButton.leftAnchor.constraint(equalTo: leftAnchor, constant: edgeInsets.left),
+            minimumValueButton.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
         
-        insertSubview(maximumValueLabel, aboveSubview: minTrackView)
+        insertSubview(maximumValueButton, aboveSubview: minTrackView)
         NSLayoutConstraint.activate([
-            maximumValueLabel.rightAnchor.constraint(equalTo: rightAnchor, constant: -edgeInsets.right),
-            maximumValueLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
-        ])
-        
-        insertSubview(minimumValueImageView, aboveSubview: minimumValueLabel)
-        NSLayoutConstraint.activate([
-            minimumValueImageView.leftAnchor.constraint(equalTo: leftAnchor, constant: edgeInsets.left),
-            minimumValueImageView.centerYAnchor.constraint(equalTo: centerYAnchor)
-        ])
-        
-        insertSubview(maximumValueImageView, aboveSubview: maximumValueLabel)
-        NSLayoutConstraint.activate([
-            maximumValueImageView.rightAnchor.constraint(equalTo: rightAnchor, constant: -edgeInsets.right),
-            maximumValueImageView.centerYAnchor.constraint(equalTo: centerYAnchor)
+            maximumValueButton.rightAnchor.constraint(equalTo: rightAnchor, constant: -edgeInsets.right),
+            maximumValueButton.centerYAnchor.constraint(equalTo: centerYAnchor)
         ])
         
         addSubview(thumbTextLabel)
@@ -393,6 +359,7 @@ extension UISliderView {
         print((#file as NSString).lastPathComponent, "=>", #function, sender.value)
         #endif
     }
+   
 }
 
 #endif

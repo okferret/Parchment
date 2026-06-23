@@ -8,82 +8,58 @@
 #if canImport(UIKit)
 import UIKit
 
-/// UserDefaultsID
-fileprivate let UserDefaultsID: String = "Parchment-Configuration-UserDefaults"
-
-/// UserDefaultsKey
-fileprivate struct UserDefaultsKey: RawRepresentable {
-    internal typealias RawValue = String
-    internal let rawValue: String
-    internal init(rawValue: String) {
-        self.rawValue = rawValue
-    }
-    internal static var transitionStyle: UserDefaultsKey { .init(rawValue: "Parchment-Configuration-UserDefaults-Key-transitionStyle") }
-    internal static var navigationOrientation: UserDefaultsKey { .init(rawValue: "Parchment-Configuration-UserDefaults-Key-navigationOrientation") }
-    internal static var themeID: UserDefaultsKey { .init(rawValue: "Parchment-Configuration-UserDefaults-Key-themeID") }
-    internal static var brightness: UserDefaultsKey { .init(rawValue: "Parchment-Configuration-UserDefaults-Key-brightness") }
-    internal static var font: UserDefaultsKey { .init(rawValue: "Parchment-Configuration-UserDefaults-Key-font") }
-}
-
 /// Configuration
 /// Configuration
 final public class Configuration: NSObject {
-    private(set) var transitionStyle: TransitionStyle = .pageCurl
-    private(set) var navigationOrientation: NavigationOrientation = .horizontal
-    private(set) var theme: Theme = .paleMint
-    private(set) var brightness: CGFloat = 0.5
-    private(set) var font: UIFont = .pingfangSC(ofSize: 20.0)
+    public var transitionStyle: TransitionStyle
+    public var navigationOrientation: NavigationOrientation
+    public var brightness: CGFloat
+    private(set) var font: UIFont
+    private(set) var theme: Theme
     
     /// NSMutableParagraphStyle
-    internal var paragraphStyle: NSMutableParagraphStyle {
+    public private(set) lazy var paragraphStyle: NSMutableParagraphStyle = {
         let obj: NSMutableParagraphStyle = .init()
-        obj.firstLineHeadIndent = "缩进".hub.width(with: font)
+        obj.firstLineHeadIndent = "缩进".hub.width(for: font)
         obj.alignment = .natural
+        obj.lineHeightMultiple = 1.5
+        obj.minimumLineHeight = 15.0
+        obj.maximumLineHeight = 50.0
+        obj.lineBreakMode = .byCharWrapping
+        obj.alignment = .justified
         return obj
-    }
+    }()
     
     /// Dictionary<NSAttributedString.Key, Any>
     public var textAttributes: Dictionary<NSAttributedString.Key, Any> {
         return [.font: font, .foregroundColor: theme.primaryText, .paragraphStyle: paragraphStyle]
     }
-    
-    /// UserDefaults
-    private lazy var userDefaults: UserDefaults = {
-        let _obj: UserDefaults
-        if let obj: UserDefaults = .init(suiteName: UserDefaultsID) {
-            _obj = obj
-        } else {
-            _obj = .init()
-            _obj.addSuite(named: UserDefaultsID)
-        }
-        return _obj
-    }()
-    
+   
     /// 构造函数
     internal override init() {
-        super.init()
-        if let transitionStyle: TransitionStyle = .init(rawValue: userDefaults.integer(forKey: UserDefaultsKey.transitionStyle.rawValue)) {
+        let standard: UserDefaults = .standard
+        if let transitionStyle: TransitionStyle = .init(rawValue: standard.integer(forKey: UserDefaultsKey.transitionStyle.rawValue)) {
             self.transitionStyle = transitionStyle
         } else {
             self.transitionStyle = .pageCurl
         }
-        if let navigationOrientation: NavigationOrientation = .init(rawValue: userDefaults.integer(forKey: UserDefaultsKey.navigationOrientation.rawValue)) {
+        if let navigationOrientation: NavigationOrientation = .init(rawValue: standard.integer(forKey: UserDefaultsKey.navigationOrientation.rawValue)) {
             self.navigationOrientation = navigationOrientation
         } else {
             self.navigationOrientation = .horizontal
         }
-        let themeID: Theme.UniqueID = .init(rawValue: userDefaults.integer(forKey: UserDefaultsKey.themeID.rawValue))
+        let themeID: Theme.UniqueID = .init(rawValue: standard.integer(forKey: UserDefaultsKey.themeID.rawValue))
         if let theme = Theme.allCases.first(where: { $0.uniqueID == themeID }) {
             self.theme = theme
         } else {
             self.theme = .paleMint
         }
-        if let newValue = userDefaults.object(forKey: UserDefaultsKey.brightness.rawValue) as? CGFloat {
+        if let newValue = standard.object(forKey: UserDefaultsKey.brightness.rawValue) as? CGFloat {
             self.brightness = newValue
         } else {
             self.brightness = UIApplication.shared.hub.brightness
         }
-        if let fontText: String = userDefaults.string(forKey: UserDefaultsKey.font.rawValue) {
+        if let fontText: String = standard.string(forKey: UserDefaultsKey.font.rawValue) {
             let cmpts: Array<String> = fontText.components(separatedBy: "<|>")
             if cmpts.count == 2, let nameText = cmpts.first, let sizeText = cmpts.last {
                 let fontSize = CGFloat((sizeText as NSString).floatValue)
@@ -94,6 +70,7 @@ final public class Configuration: NSObject {
         } else {
             self.font = .pingfangSC(ofSize: 20.0)
         }
+        super.init()
     }
     
     /// changeWith newValue
@@ -101,8 +78,8 @@ final public class Configuration: NSObject {
     internal func changeWith(_ newValue: TransitionStyle) {
         guard transitionStyle != newValue else { return }
         transitionStyle = newValue
-        userDefaults.set(newValue.rawValue, forKey: UserDefaultsKey.transitionStyle.rawValue)
-        userDefaults.synchronize()
+        UserDefaults.standard.set(newValue.rawValue, forKey: UserDefaultsKey.transitionStyle.rawValue)
+        UserDefaults.standard.synchronize()
     }
     
     /// changeWith newValue
@@ -110,8 +87,8 @@ final public class Configuration: NSObject {
     internal func changeWith(_ newValue: NavigationOrientation) {
         guard navigationOrientation != newValue else { return }
         navigationOrientation = newValue
-        userDefaults.set(newValue.rawValue, forKey: UserDefaultsKey.navigationOrientation.rawValue)
-        userDefaults.synchronize()
+        UserDefaults.standard.set(newValue.rawValue, forKey: UserDefaultsKey.navigationOrientation.rawValue)
+        UserDefaults.standard.synchronize()
     }
      
     /// changeWith newValue
@@ -119,8 +96,8 @@ final public class Configuration: NSObject {
     internal func changeWith(_ newValue: Theme) {
         guard theme != newValue else { return }
         theme = newValue
-        userDefaults.set(newValue.uniqueID.rawValue, forKey: UserDefaultsKey.themeID.rawValue)
-        userDefaults.synchronize()
+        UserDefaults.standard.set(newValue.uniqueID.rawValue, forKey: UserDefaultsKey.themeID.rawValue)
+        UserDefaults.standard.synchronize()
     }
     
     /// changeWith
@@ -128,8 +105,8 @@ final public class Configuration: NSObject {
     internal func changeWith(_ newValue: CGFloat) {
         guard brightness != newValue else { return }
         brightness = newValue
-        userDefaults.set(newValue, forKey: UserDefaultsKey.brightness.rawValue)
-        userDefaults.synchronize()
+        UserDefaults.standard.set(newValue, forKey: UserDefaultsKey.brightness.rawValue)
+        UserDefaults.standard.synchronize()
     }
     
     /// changeWith
@@ -138,8 +115,9 @@ final public class Configuration: NSObject {
         guard font.fontName != newValue.fontName || font.pointSize != newValue.pointSize else { return }
         font = newValue
         let fontText: String = "\(newValue.fontName)<|>\(newValue.pointSize)"
-        userDefaults.set(fontText, forKey: UserDefaultsKey.font.rawValue)
-        userDefaults.synchronize()
+        UserDefaults.standard.set(fontText, forKey: UserDefaultsKey.font.rawValue)
+        UserDefaults.standard.synchronize()
+        paragraphStyle.firstLineHeadIndent = "缩进".hub.width(for: font)
     }
 }
 
@@ -274,7 +252,7 @@ extension Theme: CaseIterable {
                      background:        .hex("#F6F6F6"),
                      barTint:           .hex("#FEFEFE"),
                      stressTint:        .hex("#3D82F2"),
-                     markedTint:         .hex("#54904E"),
+                     markedTint:        .hex("#54904E"),
                      primaryTint:       .hex("#333333"),
                      primaryText:       .hex("#333333"),
                      secondaryText:     .hex("#666666"),
@@ -329,6 +307,46 @@ extension Theme: CaseIterable {
                      placeholderText:   .hex("#666666"),
                      normalImage:       .module(named: "ic_theme_moon")?.withTintColor(.hex("#CCCCCC")),
                      selectedImage:     .module(named: "ic_theme_moon")?.withTintColor(.hex("#CCCCCC")))
+    }
+}
+
+/// UserDefaultsID
+fileprivate let UserDefaultsID: String = "Parchment-Configuration-UserDefaults"
+
+/// UserDefaultsKey
+fileprivate struct UserDefaultsKey: RawRepresentable {
+    internal typealias RawValue = String
+    internal let rawValue: String
+    internal init(rawValue: String) {
+        self.rawValue = rawValue
+    }
+}
+
+extension UserDefaultsKey {
+    
+    /// Parchment-Configuration-UserDefaults-Key-transitionStyle
+    internal static var transitionStyle: UserDefaultsKey {
+        return .init(rawValue: "Parchment-Configuration-UserDefaults-Key-transitionStyle")
+    }
+    
+    /// Parchment-Configuration-UserDefaults-Key-navigationOrientation
+    internal static var navigationOrientation: UserDefaultsKey {
+        return .init(rawValue: "Parchment-Configuration-UserDefaults-Key-navigationOrientation")
+    }
+    
+    /// Parchment-Configuration-UserDefaults-Key-themeID
+    internal static var themeID: UserDefaultsKey {
+       return .init(rawValue: "Parchment-Configuration-UserDefaults-Key-themeID")
+    }
+    
+    /// Parchment-Configuration-UserDefaults-Key-brightness
+    internal static var brightness: UserDefaultsKey {
+        return .init(rawValue: "Parchment-Configuration-UserDefaults-Key-brightness")
+    }
+    
+    /// Parchment-Configuration-UserDefaults-Key-font
+    internal static var font: UserDefaultsKey {
+        return .init(rawValue: "Parchment-Configuration-UserDefaults-Key-font")
     }
 }
 

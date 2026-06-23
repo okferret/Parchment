@@ -65,7 +65,7 @@ extension CompatibleWrapper where Base == String {
     /// 计算字符串在指定字体下的宽度
     /// - Parameter font: UIFont
     /// - Returns: CGFloat
-    internal func width(with font: UIFont) -> CGFloat {
+    internal func width(for font: UIFont) -> CGFloat {
         let attributes = [NSAttributedString.Key.font: font]
         let size = (base as NSString).size(withAttributes: attributes)
         return size.width

@@ -135,6 +135,7 @@ class ConfigureViewController: UIViewController, MenuContentController {
         _sliderView.translatesAutoresizingMaskIntoConstraints = false
         _sliderView.value = Float(configuration.font.pointSize)
         _sliderView.delegate = self
+        _sliderView.edgeInsets = .init(top: 0.0, left: 8.0, bottom: 0.0, right: 8.0)
         return _sliderView
     }()
     
