@@ -178,7 +178,7 @@ final public class ParchmentViewController: UINavigationController {
         // 初始化
         initialize()
         // 添加通知
-        // NotificationCenter.default.addObserver(self, selector: #selector(notificaitonHandler(_:)), name: UIScreen.brightnessDidChangeNotification, object: .none)
+        // NotificationCenter.default.addObserver(self, selector: #selector(notificationHandler(_:)), name: UIScreen.brightnessDidChangeNotification, object: .none)
         brightness = keyWindow?.screen.brightness ?? 0.5
         keyWindow?.screen.brightness = configuration.brightness
         // 调试
@@ -232,7 +232,9 @@ extension ParchmentViewController {
     ///   - useCached: Bool
     ///   - priority: TaskPriority
     private func parseWith(_ fileURL: URL, useCached: Bool = true, priority: TaskPriority = .userInitiated) {
-        Task<Void, Error>(priority: priority) {
+        // @MainActor：UI 操作（loadingView/menuController/gotoPage/present）在主线程执行；
+        // 真正的耗时解析由 BookHelper.parseWith 内部 Task(priority:) 切换到后台，await 期间不阻塞主线程。
+        Task<Void, Error>(priority: priority) { @MainActor in
             guard let keyWindow = UIApplication.shared.hub.keyWindow else { return }
             let safeAreaInsets: UIEdgeInsets = BookHelper.safeAreaInsets
             let safeArea: CGSize = keyWindow.bounds.inset(by: safeAreaInsets).size
@@ -291,8 +293,11 @@ extension ParchmentViewController {
                     obj.sketchText = String(pageWant.text.prefix(100)).components(separatedBy: .newlines).joined()
                     try context.hub.saveAndWait()
                 }
-                bookmarkItem.hub.state = .selected
-                bookmarkItem.tintColor = configuration.theme.stressTint
+                // UI 更新切回主线程
+                await MainActor.run {
+                    bookmarkItem.hub.state = .selected
+                    bookmarkItem.tintColor = configuration.theme.stressTint
+                }
             }
             
         case bookmarkItem where sender.hub.state == .selected: // 移除书签
@@ -309,8 +314,11 @@ extension ParchmentViewController {
                     objs.forEach { context.delete($0) }
                     try context.hub.saveAndWait()
                 }
-                bookmarkItem.hub.state = .normal
-                bookmarkItem.tintColor = configuration.theme.primaryTint
+                // UI 更新切回主线程
+                await MainActor.run {
+                    bookmarkItem.hub.state = .normal
+                    bookmarkItem.tintColor = configuration.theme.primaryTint
+                }
             }
          
         case chapterItem where sender.hub.state == .normal:
@@ -390,7 +398,7 @@ extension ParchmentViewController {
                     
                 case _ where rightArea.contains(location) == true && pageViewController?.transitionStyle == .scroll:
                     if let bookWant = bookWant{
-                        forewardWith(bookWant)
+                        forwardWith(bookWant)
                     }
                 default: break
                 }
@@ -421,7 +429,7 @@ extension ParchmentViewController {
     /// - Parameters:
     ///   - bookWant: BookEntity.Want
     ///   - pageViewController: UIPageViewController
-    private func forewardWith(_ bookWant: BookEntity.Want) {
+    private func forwardWith(_ bookWant: BookEntity.Want) {
         let newIndex: Int64 = bookWant.currentIndex + 1
         if let newWant: PageEntity.Want = bookWant.pageAt(newIndex) {
             tapGesture.isEnabled = false
@@ -487,9 +495,9 @@ extension ParchmentViewController {
         setViewControllers([controller], animated: false)
     }
     
-    /// notificaitonHandler
+    /// notificationHandler
     /// - Parameter sender: Notification
-    @objc private func notificaitonHandler(_ sender: Notification) {
+    @objc private func notificationHandler(_ sender: Notification) {
         switch sender.name {
         case UIScreen.brightnessDidChangeNotification:
             guard let screen = sender.object as? UIScreen else { return }
@@ -530,15 +538,18 @@ extension ParchmentViewController: UIPageViewControllerDelegate, UIPageViewContr
             // 查询数据库
             let marked: Bool = try context.hub.performAndWait { context in
                 let freq: NSFetchRequest<MarkEntity> = MarkEntity.fetchRequest()
-                freq.predicate = .init(format: "book == %@ AND offset IN %@", pageWant.book, Array(pageWant.offset ..< pageWant.offset + pageWant.length))
+                freq.predicate = .init(format: "book == %@ AND offset >= %lld AND offset < %lld", pageWant.book, pageWant.offset, pageWant.offset + pageWant.length)
                 return try context.count(for: freq) > 0
             }
-            if marked == true {
-                bookmarkItem.hub.state = .selected
-                bookmarkItem.tintColor = configuration.theme.stressTint
-            } else {
-                bookmarkItem.hub.state = .normal
-                bookmarkItem.tintColor = configuration.theme.primaryTint
+            // UI 更新切回主线程
+            await MainActor.run {
+                if marked == true {
+                    bookmarkItem.hub.state = .selected
+                    bookmarkItem.tintColor = configuration.theme.stressTint
+                } else {
+                    bookmarkItem.hub.state = .normal
+                    bookmarkItem.tintColor = configuration.theme.primaryTint
+                }
             }
         }
         // 更新角标
@@ -658,23 +669,25 @@ extension ParchmentViewController: MenuViewControllerDelegate {
         }
     }
     
-    /// forewardActionWith
+    /// forwardActionWith
     /// - Parameters:
     ///   - controller: MenuViewController
     ///   - sender: UIButton
-    internal func controller(_ controller: MenuViewController, forewardActionWith sender: UIButton) {
+    internal func controller(_ controller: MenuViewController, forwardActionWith sender: UIButton) {
         if let bookWant = bookWant {
-            forewardWith(bookWant)
+            forwardWith(bookWant)
         }
     }
     
-    /// progressActionWtih
+    /// progressActionWith
     /// - Parameters:
     ///   - controller: MenuViewController
     ///   - value: Float
-    internal func controller(_ controller: MenuViewController, progressActionWtih value: Float) {
-        guard let bookWant = bookWant else { return }
-        let index: Int64 = Int64(Float(bookWant.totalUnitCount - 1) * value)
+    internal func controller(_ controller: MenuViewController, progressActionWith value: Float) {
+        guard let bookWant = bookWant, bookWant.totalUnitCount > 0 else { return }
+        // 钳制 index 到 [0, totalUnitCount - 1]，避免浮点误差或 totalUnitCount 异常时越界
+        let rawIndex: Int64 = Int64(Float(bookWant.totalUnitCount - 1) * value)
+        let index: Int64 = min(max(0, rawIndex), bookWant.totalUnitCount - 1)
         if let newWant: PageEntity.Want = bookWant.pageAt(index) {
             gotoPageWith(newWant, direction: .forward, animated: false, completionHandler: .none)
         }

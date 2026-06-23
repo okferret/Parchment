@@ -54,11 +54,30 @@ extension CompatibleWrapper where Base: NSManagedObjectContext {
     }
     
     /// 逐级保存
+    ///
+    /// - 子 context 的 `save()` 会同步将更改合并进父 context 的内存，
+    ///   因此父（通常为主队列 `viewContext`）在内存层面立即可见这些更改，
+    ///   后续主队列读取（如 `pageAt`）无需等待磁盘持久化即可读到最新数据。
+    /// - 当父 context 为主队列并发类型时，其磁盘持久化改为**异步**执行（`perform`），
+    ///   避免在后台调用线程上同步等待主线程完成磁盘写入而阻塞主线程。
+    /// - 非主队列父 context 仍保持同步逐级保存语义。
     internal func saveAndWait() throws {
         guard base.hasChanges == true else { return }
         try base.save()
-        if let ctx = base.parent {
-            try ctx.hub.performAndWait { ctx in
+        guard let parent = base.parent else { return }
+        if parent.concurrencyType == .mainQueueConcurrencyType {
+            // 内存更改已同步合并进父（viewContext），磁盘持久化异步进行，避免阻塞主线程
+            parent.perform {
+                do {
+                    try parent.hub.saveAndWait()
+                } catch {
+                    #if DEBUG
+                    print("Async parent context save error: \(error)")
+                    #endif
+                }
+            }
+        } else {
+            try parent.hub.performAndWait { ctx in
                 try ctx.hub.saveAndWait()
             }
         }

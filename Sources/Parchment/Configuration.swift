@@ -21,7 +21,6 @@ final public class Configuration: NSObject {
     public private(set) lazy var paragraphStyle: NSMutableParagraphStyle = {
         let obj: NSMutableParagraphStyle = .init()
         obj.firstLineHeadIndent = "缩进".hub.width(for: font)
-        obj.alignment = .natural
         obj.lineHeightMultiple = 1.5
         obj.minimumLineHeight = 15.0
         obj.maximumLineHeight = 50.0
@@ -35,31 +34,34 @@ final public class Configuration: NSObject {
         return [.font: font, .foregroundColor: theme.primaryText, .paragraphStyle: paragraphStyle]
     }
    
-    /// 构造函数
-    internal override init() {
+    /// 指定构造函数
+    /// - Parameter loadFromStore: 是否从 `UserDefaults` 读取已保存配置；
+    ///   - `true`：读取用户已保存配置，缺省项回落到出厂默认（用于 `current()`）
+    ///   - `false`：忽略已保存配置，全部使用出厂默认值（用于 `default()`）
+    internal init(loadFromStore: Bool) {
         let standard: UserDefaults = .standard
-        if let transitionStyle: TransitionStyle = .init(rawValue: standard.integer(forKey: UserDefaultsKey.transitionStyle.rawValue)) {
+        if loadFromStore, let transitionStyle: TransitionStyle = .init(rawValue: standard.integer(forKey: UserDefaultsKey.transitionStyle.rawValue)) {
             self.transitionStyle = transitionStyle
         } else {
             self.transitionStyle = .pageCurl
         }
-        if let navigationOrientation: NavigationOrientation = .init(rawValue: standard.integer(forKey: UserDefaultsKey.navigationOrientation.rawValue)) {
+        if loadFromStore, let navigationOrientation: NavigationOrientation = .init(rawValue: standard.integer(forKey: UserDefaultsKey.navigationOrientation.rawValue)) {
             self.navigationOrientation = navigationOrientation
         } else {
             self.navigationOrientation = .horizontal
         }
         let themeID: Theme.UniqueID = .init(rawValue: standard.integer(forKey: UserDefaultsKey.themeID.rawValue))
-        if let theme = Theme.allCases.first(where: { $0.uniqueID == themeID }) {
+        if loadFromStore, let theme = Theme.allCases.first(where: { $0.uniqueID == themeID }) {
             self.theme = theme
         } else {
             self.theme = .paleMint
         }
-        if let newValue = standard.object(forKey: UserDefaultsKey.brightness.rawValue) as? CGFloat {
+        if loadFromStore, let newValue = standard.object(forKey: UserDefaultsKey.brightness.rawValue) as? CGFloat {
             self.brightness = newValue
         } else {
             self.brightness = UIApplication.shared.hub.brightness
         }
-        if let fontText: String = standard.string(forKey: UserDefaultsKey.font.rawValue) {
+        if loadFromStore, let fontText: String = standard.string(forKey: UserDefaultsKey.font.rawValue) {
             let cmpts: Array<String> = fontText.components(separatedBy: "<|>")
             if cmpts.count == 2, let nameText = cmpts.first, let sizeText = cmpts.last {
                 let fontSize = CGFloat((sizeText as NSString).floatValue)
@@ -72,14 +74,14 @@ final public class Configuration: NSObject {
         }
         super.init()
     }
-    
+
+    /// 便利构造函数：默认读取已保存配置
     /// changeWith newValue
     /// - Parameter newValue: TransitionStyle
     internal func changeWith(_ newValue: TransitionStyle) {
         guard transitionStyle != newValue else { return }
         transitionStyle = newValue
         UserDefaults.standard.set(newValue.rawValue, forKey: UserDefaultsKey.transitionStyle.rawValue)
-        UserDefaults.standard.synchronize()
     }
     
     /// changeWith newValue
@@ -88,7 +90,6 @@ final public class Configuration: NSObject {
         guard navigationOrientation != newValue else { return }
         navigationOrientation = newValue
         UserDefaults.standard.set(newValue.rawValue, forKey: UserDefaultsKey.navigationOrientation.rawValue)
-        UserDefaults.standard.synchronize()
     }
      
     /// changeWith newValue
@@ -97,7 +98,6 @@ final public class Configuration: NSObject {
         guard theme != newValue else { return }
         theme = newValue
         UserDefaults.standard.set(newValue.uniqueID.rawValue, forKey: UserDefaultsKey.themeID.rawValue)
-        UserDefaults.standard.synchronize()
     }
     
     /// changeWith
@@ -106,7 +106,6 @@ final public class Configuration: NSObject {
         guard brightness != newValue else { return }
         brightness = newValue
         UserDefaults.standard.set(newValue, forKey: UserDefaultsKey.brightness.rawValue)
-        UserDefaults.standard.synchronize()
     }
     
     /// changeWith
@@ -116,23 +115,22 @@ final public class Configuration: NSObject {
         font = newValue
         let fontText: String = "\(newValue.fontName)<|>\(newValue.pointSize)"
         UserDefaults.standard.set(fontText, forKey: UserDefaultsKey.font.rawValue)
-        UserDefaults.standard.synchronize()
         paragraphStyle.firstLineHeadIndent = "缩进".hub.width(for: font)
     }
 }
 
 extension Configuration {
     
-    /// 获取默认配置信息
+    /// 获取出厂默认配置（忽略 UserDefaults 中已保存的用户配置）
     /// - Returns: Configuration
     public static func `default`() -> Configuration {
-        return .init()
+        return .init(loadFromStore: false)
     }
     
-    /// 获取当前配置信息
+    /// 获取当前配置信息（读取 UserDefaults 中已保存的用户配置）
     /// - Returns: Configuration
     public static func current() -> Configuration {
-        return .init()
+        return .init(loadFromStore: true)
     }
     
     /// URL
@@ -291,7 +289,7 @@ extension Theme: CaseIterable {
     /// 曜石黑
     internal static var jetBlack: Theme {
         return .init(uniqueID:          .jetBlack,
-                     background:        .hex("#11111"),
+                     background:        .hex("#111111"),
                      barTint:           .hex("#222222"),
                      stressTint:        .hex("#3D82F2"),
                      markedTint:         .hex("#54904E"),
@@ -309,9 +307,6 @@ extension Theme: CaseIterable {
                      selectedImage:     .module(named: "ic_theme_moon")?.withTintColor(.hex("#CCCCCC")))
     }
 }
-
-/// UserDefaultsID
-fileprivate let UserDefaultsID: String = "Parchment-Configuration-UserDefaults"
 
 /// UserDefaultsKey
 fileprivate struct UserDefaultsKey: RawRepresentable {

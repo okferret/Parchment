@@ -65,7 +65,7 @@ extension BookParser {
         }
         // 解析数据
         let filename: String = FileManager.default.displayName(atPath: fileURL.path)
-        var newText: String
+        let newText: String
         if let encoding = encoding {
             do {
                 newText = try .init(contentsOf: fileURL, encoding: encoding).hub.cleanText
@@ -77,8 +77,6 @@ extension BookParser {
             let encoding: String.Encoding = try BookParser.detectEncoding(for: fileURL)
             newText = try .init(contentsOf: fileURL, encoding: encoding).hub.cleanText
         }
-        // 预处理
-        newText = newText.hub.cleanText
         guard let newData: Data = newText.data(using: .utf8) else {
             throw PAError.customWith("文件编码失败")
         }

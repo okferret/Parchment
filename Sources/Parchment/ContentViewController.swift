@@ -80,10 +80,10 @@ extension ContentViewController {
                 if let lineText: String = pageWant.text.components(separatedBy: .newlines).first {
                     let range: NSRange = .init(lineText.startIndex..., in: lineText)
                     newText.removeAttribute(.paragraphStyle, range: range)
-                    if let paragraphStyle: NSMutableParagraphStyle = configuration.paragraphStyle.hub.mutableCopy() {
-                        paragraphStyle.firstLineHeadIndent = 0.0
-                        newText.addAttribute(.paragraphStyle, value: pageWant, range: range)
-                    }
+                    // 使用 mutableCopy 创建副本，避免修改共享的 configuration.paragraphStyle
+                    let paragraphStyle: NSMutableParagraphStyle = configuration.paragraphStyle.mutableCopy() as! NSMutableParagraphStyle
+                    paragraphStyle.firstLineHeadIndent = 0.0
+                    newText.addAttribute(.paragraphStyle, value: paragraphStyle, range: range)
                 }
                 self.contentView.attributedText = newText
             } else {
@@ -122,7 +122,7 @@ fileprivate class ContentView: UIView {
         let path = CGMutablePath()
         path.addRect(bounds)
         // 创建 CTFrame
-        let frame = CTFramesetterCreateFrame(framesetter, CFRange(location: 0, length: 0), path, nil)
+        let frame = CTFramesetterCreateFrame(framesetter, CFRange(location: 0, length: attributedText.length), path, nil)
         // 绘制
         CTFrameDraw(frame, context)
         context.restoreGState()

@@ -18,17 +18,17 @@ protocol ProgressViewControllerDelegate: AnyObject {
     ///   - sender: UIButton
     func controller(_ controller: ProgressViewController, backwardActionWith sender: UIButton)
     
-    /// forewardActionWith
+    /// forwardActionWith
     /// - Parameters:
     ///   - controller: ProgressViewController
     ///   - sender: UIButton
-    func controller(_ controller: ProgressViewController, forewardActionWith sender: UIButton)
+    func controller(_ controller: ProgressViewController, forwardActionWith sender: UIButton)
     
-    /// progressActionWtih
+    /// progressActionWith
     /// - Parameters:
     ///   - controller: ProgressViewController
     ///   - value: Float
-    func controller(_ controller: ProgressViewController, progressActionWtih value: Float)
+    func controller(_ controller: ProgressViewController, progressActionWith value: Float)
 }
 
 class ProgressViewController: UIViewController, MenuContentController {
@@ -147,7 +147,12 @@ class ProgressViewController: UIViewController, MenuContentController {
         // 注册通知
         NotificationCenter.default.addObserver(self, selector: #selector(notificationHandler(_:)), name: BookHelper.progressNotification, object: .none)
         // 同步数据
-        sliderView.value = Float(bookWant.currentIndex) / Float(bookWant.totalUnitCount - 1)
+        // 防止 totalUnitCount <= 1 时分母为 0 或负数导致 NaN/越界，单页时进度恒为 0
+        if bookWant.totalUnitCount > 1 {
+            sliderView.value = Float(bookWant.currentIndex) / Float(bookWant.totalUnitCount - 1)
+        } else {
+            sliderView.value = 0.0
+        }
     }
     
     /// traitCollectionDidChange
@@ -211,7 +216,7 @@ extension ProgressViewController {
         case leftButton:
             delegate?.controller(self, backwardActionWith: sender)
         case rightButton:
-            delegate?.controller(self, forewardActionWith: sender)
+            delegate?.controller(self, forwardActionWith: sender)
         default: break
         }
     }
@@ -224,7 +229,7 @@ extension ProgressViewController {
             guard let currentIndex = sender.userInfo?["currentIndex"] as? Int64,
                   let totalUnitCount = sender.userInfo?["totalUnitCount"] as? Int64
             else { return }
-            sliderView.value = Float(currentIndex) / Float(totalUnitCount - 1)
+            sliderView.value = totalUnitCount > 1 ? Float(currentIndex) / Float(totalUnitCount - 1) : 0.0
         default: break
         }
     }
@@ -238,7 +243,7 @@ extension ProgressViewController: UISliderViewDelegate {
     ///   - sliderView: UISliderView
     ///   - trackValue: Float
     internal func sliderView(_ sliderView: UISliderView, trackValueAction trackValue: Float) {
-        delegate?.controller(self, progressActionWtih: trackValue)
+        delegate?.controller(self, progressActionWith: trackValue)
     }
     
     /// slideAction

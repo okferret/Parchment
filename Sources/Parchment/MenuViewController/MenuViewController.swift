@@ -23,8 +23,8 @@ protocol MenuViewControllerDelegate: UINavigationControllerDelegate {
     func controller(_ controller: MenuViewController, chapterActionWith newWant: ChapterEntity.Want)
     func controller(_ controller: MenuViewController, bookmarkActionWith newWant: MarkEntity.Want)
     func controller(_ controller: MenuViewController, backwardActionWith sender: UIButton)
-    func controller(_ controller: MenuViewController, forewardActionWith sender: UIButton)
-    func controller(_ controller: MenuViewController, progressActionWtih value: Float)
+    func controller(_ controller: MenuViewController, forwardActionWith sender: UIButton)
+    func controller(_ controller: MenuViewController, progressActionWith value: Float)
     func controller(_ controller: MenuViewController, brightnessActionWith brightness: CGFloat)
     func controller(_ controller: MenuViewController, fontActionWith uiFont: UIFont)
     func controller(_ controller: MenuViewController, themeActionWith theme: Theme)
@@ -110,7 +110,7 @@ class MenuViewController: UINavigationController {
     /// - Parameter menuType: MenuType
     internal func showMenuWith(_ menuType: MenuType) async {
         await withCheckedContinuation { continuation in
-            hideMenu { continuation.resume() }
+            showMenuWith(menuType) { continuation.resume() }
         }
     }
     
@@ -198,20 +198,20 @@ extension MenuViewController: ProgressViewControllerDelegate, ConfigureViewContr
         menuDelegate?.controller(self, backwardActionWith: sender)
     }
     
-    /// forewardActionWith
+    /// forwardActionWith
     /// - Parameters:
     ///   - controller: ProgressViewController
     ///   - sender: UIButton
-    internal func controller(_ controller: ProgressViewController, forewardActionWith sender: UIButton) {
-        menuDelegate?.controller(self, forewardActionWith: sender)
+    internal func controller(_ controller: ProgressViewController, forwardActionWith sender: UIButton) {
+        menuDelegate?.controller(self, forwardActionWith: sender)
     }
     
-    /// progressActionWtih
+    /// progressActionWith
     /// - Parameters:
     ///   - controller: ProgressViewController
     ///   - value: Float
-    internal func controller(_ controller: ProgressViewController, progressActionWtih value: Float) {
-        menuDelegate?.controller(self, progressActionWtih: value)
+    internal func controller(_ controller: ProgressViewController, progressActionWith value: Float) {
+        menuDelegate?.controller(self, progressActionWith: value)
     }
     
     /// brightnessActionWith

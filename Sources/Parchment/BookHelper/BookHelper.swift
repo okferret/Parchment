@@ -243,11 +243,17 @@ extension BookHelper {
                 obj.isTruncated = element.isTruncated
                 bookObj.addToPages(obj)
             }
-            bookObj.totalUnitCount = Int64(newArray.count)
             bookObj.isReady = true
-            // 修复：使用枚举索引（页码）而非字节偏移，与 pageAt(_:) 的数组下标语义一致
-            bookObj.currentIndex = Int64(enumerated.first(where: { $0.element.offset >= offset })?.0 ?? 0)
             bookObj.totalUnitCount = Int64(newArray.count)
+            // 使用枚举索引（页码）而非字节偏移，与 pageAt(_:) 的数组下标语义一致。
+            // 查找首个 offset >= 原阅读字节偏移的新页作为恢复位置；
+            // 若全部新页 offset 都 < offset（原位置接近全书末尾），则回退到最后一页，
+            // 而非跳回书首（index 0），避免重排后丢失阅读进度。
+            if let matchedIndex = enumerated.first(where: { $0.element.offset >= offset })?.0 {
+                bookObj.currentIndex = Int64(matchedIndex)
+            } else {
+                bookObj.currentIndex = Int64(max(0, newArray.count - 1))
+            }
             try context.obtainPermanentIDs(for: Array(bookObj.pages))
             try context.hub.saveAndWait()
             return bookObj.hub.want
