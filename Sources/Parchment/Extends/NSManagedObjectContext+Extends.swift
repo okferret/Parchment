@@ -71,9 +71,7 @@ extension CompatibleWrapper where Base: NSManagedObjectContext {
                 do {
                     try parent.hub.saveAndWait()
                 } catch {
-                    #if DEBUG
                     print("Async parent context save error: \(error)")
-                    #endif
                 }
             }
         } else {

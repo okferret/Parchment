@@ -22,11 +22,7 @@ extension BookParser {
     /// - Parameter fileURL: URL
     /// - Returns: String.Encoding
     private static func detectEncoding(for fileURL: URL) throws -> String.Encoding {
-        guard fileURL.isFileURL == true else { throw PAError.customWith("不支持当前存储路径") }
-        var isDir: ObjCBool = .init(false)
-        guard FileManager.default.fileExists(atPath: fileURL.path, isDirectory: &isDir) == true && isDir.boolValue == false else {
-            throw PAError.customWith("不支持当前文件")
-        }
+        // 注意：调用方（parseWith）已校验 fileURL 为合法文件，此处不再重复检查
         return try Uchardet.detect(fileURL).encoding
     }
     
@@ -61,7 +57,17 @@ extension BookParser {
             return objs.first?.hub.want
         })
         if let bookWant = bookWant {
-            return bookWant
+            // 校验缓存对应的磁盘文件是否仍存在：存在则直接复用缓存；
+            // 若文件已被系统清理或误删，则删除失效记录并继续走重新解析流程。
+            if FileManager.default.fileExists(atPath: bookWant.cacheURL.path) == true {
+                return bookWant
+            } else {
+                try? context.hub.performAndWait { context in
+                    let obj: BookEntity = try context.hub.fetchAny(for: bookWant.objectID)
+                    context.delete(obj)
+                    try context.hub.saveAndWait()
+                }
+            }
         }
         // 解析数据
         let filename: String = FileManager.default.displayName(atPath: fileURL.path)
@@ -95,28 +101,35 @@ extension BookParser {
         try? FileManager.default.removeItem(at: fileURL)
         try newData.write(to: fileURL, options: [.atomic])
         // 写入数据库
-        let newWant: BookEntity.Want = try context.hub.performAndWait { context in
-            let bookObj: BookEntity = .init(context: context)
-            bookObj.relativeUID = relativeUID
-            bookObj.relativePath = relativePath
-            bookObj.hub.encoding = .utf8
-            bookObj.filename = filename
-            bookObj.chapters = []
-            bookObj.marks = []
-            bookObj.pages = []
-            elements.forEach { (title, offset, length, sketchText) in
-                let chapter: ChapterEntity = .init(context: context)
-                chapter.title = title
-                chapter.offset = offset
-                chapter.length = length
-                chapter.sketchText = sketchText
-                bookObj.addToChapters(chapter)
+        // 保证原子性：数据库写入失败时回滚已写入的磁盘文件，避免产生无数据库记录的孤儿文件。
+        do {
+            let newWant: BookEntity.Want = try context.hub.performAndWait { context in
+                let bookObj: BookEntity = .init(context: context)
+                bookObj.relativeUID = relativeUID
+                bookObj.relativePath = relativePath
+                bookObj.hub.encoding = .utf8
+                bookObj.filename = filename
+                bookObj.chapters = []
+                bookObj.marks = []
+                bookObj.pages = []
+                elements.forEach { (title, offset, length, sketchText) in
+                    let chapter: ChapterEntity = .init(context: context)
+                    chapter.title = title
+                    chapter.offset = offset
+                    chapter.length = length
+                    chapter.sketchText = sketchText
+                    bookObj.addToChapters(chapter)
+                }
+                try context.obtainPermanentIDs(for: [bookObj] + bookObj.chapters)
+                try context.hub.saveAndWait()
+                return bookObj.hub.want
             }
-            try context.obtainPermanentIDs(for: [bookObj] + bookObj.chapters)
-            try context.hub.saveAndWait()
-            return bookObj.hub.want
+            return newWant
+        } catch {
+            // 数据库写入失败，清理刚写入的磁盘文件，保持磁盘与数据库一致
+            try? FileManager.default.removeItem(at: fileURL)
+            throw error
         }
-        return newWant
     }
 }
 

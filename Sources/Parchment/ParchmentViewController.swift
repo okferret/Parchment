@@ -177,23 +177,16 @@ final public class ParchmentViewController: UINavigationController {
         super.viewDidLoad()
         // 初始化
         initialize()
-        // 添加通知
+        // 添加通知：监听系统亮度变化，同步回配置
         // NotificationCenter.default.addObserver(self, selector: #selector(notificationHandler(_:)), name: UIScreen.brightnessDidChangeNotification, object: .none)
         brightness = keyWindow?.screen.brightness ?? 0.5
         keyWindow?.screen.brightness = configuration.brightness
-        // 调试
-        #if DEBUG
-        // BookHelper.clearnAll()
-        #endif
         // 解析数据
         parseWith(fileURL)
     }
 
     deinit {
-        NotificationCenter.default.removeObserver(self)
-#if DEBUG
         print(#function, "=>", (#file as NSString).lastPathComponent)
-#endif
     }
 }
 
@@ -618,22 +611,7 @@ extension ParchmentViewController: MenuViewControllerDelegate {
     ///   - controller: MenuViewController
     ///   - newWant: ChapterEntity.Want
     internal func controller(_ controller: MenuViewController, chapterActionWith newWant: ChapterEntity.Want) {
-        Task(priority: .userInitiated) {
-            let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
-            let pageWant: Optional<PageEntity.Want> = try context.hub.performAndWait { context in
-                let freq: NSFetchRequest<PageEntity> = PageEntity.fetchRequest()
-                freq.sortDescriptors = [.init(key: #keyPath(PageEntity.offset), ascending: false)]
-                freq.fetchLimit = 1
-                freq.predicate = .init(format: "book == %@ AND offset <= %lld", newWant.book, newWant.offset)
-                return try context.fetch(freq).first?.hub.want
-            }
-            if let pageWant = pageWant,
-               let first = pageViewController?.viewControllers?.first as? ContentViewController, pageWant.objectID != first.pageWant?.objectID {
-                gotoPageWith(pageWant, direction: .forward, animated: false, completionHandler: .none)
-            }
-            await controller.hideMenu()
-            hideBarAction()
-        }
+        gotoOffsetWith(newWant.book, offset: newWant.offset, in: controller)
     }
     
     /// bookmarkActionWith
@@ -641,13 +619,22 @@ extension ParchmentViewController: MenuViewControllerDelegate {
     ///   - controller: MenuViewController
     ///   - newWant: MarkEntity.Want
     internal func controller(_ controller: MenuViewController, bookmarkActionWith newWant: MarkEntity.Want) {
+        gotoOffsetWith(newWant.book, offset: newWant.offset, in: controller)
+    }
+    
+    /// 跳转到指定字节偏移所在的页（章节/书签共用）
+    /// - Parameters:
+    ///   - book: 书籍 NSManagedObjectID
+    ///   - offset: 目标字节偏移
+    ///   - controller: MenuViewController，跳转后隐藏其菜单
+    private func gotoOffsetWith(_ book: NSManagedObjectID, offset: Int64, in controller: MenuViewController) {
         Task(priority: .userInitiated) {
             let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
             let pageWant: Optional<PageEntity.Want> = try context.hub.performAndWait { context in
                 let freq: NSFetchRequest<PageEntity> = PageEntity.fetchRequest()
                 freq.sortDescriptors = [.init(key: #keyPath(PageEntity.offset), ascending: false)]
                 freq.fetchLimit = 1
-                freq.predicate = .init(format: "book == %@ AND offset <= %lld", newWant.book, newWant.offset)
+                freq.predicate = .init(format: "book == %@ AND offset <= %lld", book, offset)
                 return try context.fetch(freq).first?.hub.want
             }
             if let pageWant = pageWant,

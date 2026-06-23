@@ -80,7 +80,12 @@ public class BookHelper: NSObject {
         container.loadPersistentStores { (_, error) in
             defer { semaphore.signal() }
             if let error = error {
+                #if DEBUG
+                // 调试期直接崩溃，便于第一时间发现存储加载失败（如模型不兼容、磁盘损坏）
+                fatalError("Core Data load error: \(error)")
+                #else
                 print("Core Data load error: \(error)")
+                #endif
             }
         }
         semaphore.wait()
@@ -126,28 +131,36 @@ extension BookHelper {
     /// cleanWith
     /// - Parameter fileURL: URL
     public static func cleanWith(_ fileURL: URL) {
-        Task<Void, Error>(priority: .userInitiated) {
-            let relativeUID: String = BookHelper.relativeUID(for: fileURL)
-            let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
-            try context.hub.performAndWait { context in
-                let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
-                freq.predicate = .init(format: "relativeUID == %@", relativeUID)
-                let objs: Array<BookEntity> = try context.fetch(freq)
-                objs.forEach { context.delete($0) }
-                try context.hub.saveAndWait()
+        Task<Void, Never>(priority: .userInitiated) {
+            do {
+                let relativeUID: String = BookHelper.relativeUID(for: fileURL)
+                let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
+                try context.hub.performAndWait { context in
+                    let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
+                    freq.predicate = .init(format: "relativeUID == %@", relativeUID)
+                    let objs: Array<BookEntity> = try context.fetch(freq)
+                    objs.forEach { context.delete($0) }
+                    try context.hub.saveAndWait()
+                }
+            } catch {
+                print("BookHelper.cleanWith error: \(error)")
             }
         }
     }
     
     /// clean all
     public static func clearAll() {
-        Task<Void, Error>(priority: .userInitiated) {
-            let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
-            try context.hub.performAndWait { context in
-                let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
-                let objs: Array<BookEntity> = try context.fetch(freq)
-                objs.forEach { context.delete($0) }
-                try context.hub.saveAndWait()
+        Task<Void, Never>(priority: .userInitiated) {
+            do {
+                let context: NSManagedObjectContext = BookHelper.newBackgroundContext()
+                try context.hub.performAndWait { context in
+                    let freq: NSFetchRequest<BookEntity> = BookEntity.fetchRequest()
+                    let objs: Array<BookEntity> = try context.fetch(freq)
+                    objs.forEach { context.delete($0) }
+                    try context.hub.saveAndWait()
+                }
+            } catch {
+                print("BookHelper.clearAll error: \(error)")
             }
         }
     }

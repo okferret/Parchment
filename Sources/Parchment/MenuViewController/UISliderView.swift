@@ -355,9 +355,7 @@ extension UISliderView {
         } else {
             delegate?.sliderView(self, trackValueAction: sender.value)
         }
-        #if DEBUG
         print((#file as NSString).lastPathComponent, "=>", #function, sender.value)
-        #endif
     }
    
 }

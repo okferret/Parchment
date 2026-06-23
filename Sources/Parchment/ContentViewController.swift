@@ -25,7 +25,7 @@ class ContentViewController: UIViewController {
     /// PageEntity.Want
     private(set) var pageWant: Optional<PageEntity.Want> = .none
     /// Configuration
-    private(set) var configuration: Configuration = .default()
+    private(set) var configuration: Configuration = .current()
     
     //  MARK: - 生命周期
 

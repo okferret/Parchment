@@ -40,13 +40,6 @@ extension CompatibleWrapper where Base: FileManager {
     ///   - hashType: HashType
     /// - Returns: String
     internal func hashWith(_ fileURL: URL, hashType: HashType) throws -> String {
-#if DEBUG
-        let start = CACurrentMediaTime()
-        defer {
-            let end = CACurrentMediaTime()
-            print("计算哈希耗时 =>", end - start)
-        }
-#endif
         var isDir: ObjCBool = .init(false)
         guard FileManager.default.hub.fileExists(atURL: fileURL, isDirectory: &isDir) == true else {
             throw PAError.customWith("当前文件不存在")

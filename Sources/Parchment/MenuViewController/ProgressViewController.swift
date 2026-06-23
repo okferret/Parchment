@@ -149,7 +149,9 @@ class ProgressViewController: UIViewController, MenuContentController {
         // 同步数据
         // 防止 totalUnitCount <= 1 时分母为 0 或负数导致 NaN/越界，单页时进度恒为 0
         if bookWant.totalUnitCount > 1 {
-            sliderView.value = Float(bookWant.currentIndex) / Float(bookWant.totalUnitCount - 1)
+            // 钳制 currentIndex 到 [0, totalUnitCount - 1]，避免重排瞬间 currentIndex 越界导致 value > 1
+            let index: Int64 = min(max(0, bookWant.currentIndex), bookWant.totalUnitCount - 1)
+            sliderView.value = Float(index) / Float(bookWant.totalUnitCount - 1)
         } else {
             sliderView.value = 0.0
         }
