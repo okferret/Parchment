@@ -428,8 +428,9 @@ extension ParchmentViewController {
         let newIndex: Int64 = bookWant.currentIndex + 1
         if let newWant: PageEntity.Want = bookWant.pageAt(newIndex) {
             tapGesture.isEnabled = false
-            gotoPageWith(newWant, direction: .forward, animated: true) {[weak tapGesture] in
-                tapGesture?.isEnabled = true
+            gotoPageWith(newWant, direction: .forward, animated: true) {[weak self] in
+                guard let this = self, let transitionStyle = this.pageViewController?.transitionStyle else { return }
+                this.tapGesture.isEnabled = true
             }
         }
     }
@@ -442,8 +443,9 @@ extension ParchmentViewController {
         let newIndex: Int64 = bookWant.currentIndex - 1
         if let newWant: PageEntity.Want = bookWant.pageAt(newIndex) {
             tapGesture.isEnabled = false
-            gotoPageWith(newWant, direction: .reverse, animated: true) {[weak tapGesture] in
-                tapGesture?.isEnabled = true
+            gotoPageWith(newWant, direction: .reverse, animated: true) {[weak self] in
+                guard let this = self, let transitionStyle = this.pageViewController?.transitionStyle else { return }
+                this.tapGesture.isEnabled = true
             }
         }
     }
@@ -476,10 +478,22 @@ extension ParchmentViewController {
     /// - Parameter transitionStyle: TransitionStyle
     private func changeTransitionStyle(_ transitionStyle: TransitionStyle) {
         guard let pageViewController = pageViewController, pageViewController.transitionStyle != transitionStyle else { return }
+        guard let bookWant: BookEntity.Want = bookWant else { return }
+        let viewControllers: Array<UIViewController>
+        if let objs: Array<UIViewController> = pageViewController.viewControllers {
+            viewControllers = objs
+        } else if let pageWant: PageEntity.Want = bookWant.pageAt(bookWant.currentIndex) ?? bookWant.pageAt(0) {
+            let content: ContentViewController = .init()
+            content.reloadWith(pageWant, configuration: configuration)
+            viewControllers = [content]
+        } else {
+            viewControllers = []
+        }
+        guard viewControllers.isEmpty == false else { return }
         let controller: UIPageViewController = .init(transitionStyle: transitionStyle,
                                                      navigationOrientation: pageViewController.navigationOrientation,
                                                      options: [.interPageSpacing: 0.0, .spineLocation: SpineLocation.min.rawValue])
-        controller.setViewControllers(pageViewController.viewControllers, direction: .forward, animated: false)
+        controller.setViewControllers(viewControllers, direction: .forward, animated: false)
         controller.navigationItem.leftBarButtonItem = closeItem
         controller.navigationItem.rightBarButtonItem = bookmarkItem
         controller.navigationItem.title = fileURL.deletingPathExtension().lastPathComponent
