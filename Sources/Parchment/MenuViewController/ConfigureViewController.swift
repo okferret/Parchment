@@ -387,7 +387,7 @@ extension ConfigureViewController {
             $0.isUserInteractionEnabled = true
             $0.isSelected = false
         }
-        sender.layer.borderColor = configuration.theme.primaryTint.cgColor
+        sender.layer.borderColor = configuration.theme.stressTint.cgColor
         sender.isUserInteractionEnabled = false
         sender.isSelected = true
         // 更新翻页方式
