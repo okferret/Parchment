@@ -189,11 +189,11 @@ extension Theme: CaseIterable {
             self.rawValue = rawValue
         }
         
-        internal static var paleMint: UniqueID { .init(rawValue: 1 << 1) }
-        internal static var powderBlue: UniqueID { .init(rawValue: 1 << 2) }
-        internal static var oatmeal: UniqueID { .init(rawValue: 1 << 3) }
-        internal static var offWhite: UniqueID { .init(rawValue: 1 << 4) }
-        internal static var jetBlack: UniqueID { .init(rawValue: 1 << 5) }
+        internal static let paleMint: UniqueID = .init(rawValue: 1 << 1)
+        internal static let powderBlue: UniqueID = .init(rawValue: 1 << 2)
+        internal static let oatmeal: UniqueID = .init(rawValue: 1 << 3)
+        internal static let offWhite: UniqueID = .init(rawValue: 1 << 4)
+        internal static let jetBlack: UniqueID  = .init(rawValue: 1 << 5)
     }
     
     /// [Colors]
@@ -203,109 +203,98 @@ extension Theme: CaseIterable {
     
     
     /// 淡薄荷绿
-    internal static var paleMint: Theme {
-        return .init(uniqueID:          .paleMint,
-                     background:        .hex("#D5E3D3"),
-                     barTint:           .hex("#E6EFE5"),
-                     stressTint:        .hex("#54904F"),
-                     markedTint:         .hex("#54904E"),
-                     primaryTint:       .hex("#333333"),
-                     primaryText:       .hex("#333333"),
-                     secondaryText:     .hex("#666666"),
-                     separatorTint:     .hex("#CAD7C8"),
-                     indicator:         .hex("#BFCBBD"),
-                     segmentBackground: .hex("#CAD7C8"),
-                     segmentTint:       .hex("#E6EFE5"),
-                     thumbTintColor:    .hex("#E6EFE5"),
-                     placeholderTint:   .hex("#CAD7C8"),
-                     placeholderText:   .hex("#999999"),
-                     normalImage:       .none,
-                     selectedImage:     .module(named: "ic_theme_selected")?.withTintColor(.hex("#54904F")))
-    }
-    
+    internal static let paleMint: Theme = .init(uniqueID:          .paleMint,
+                                                background:        .hex("#D5E3D3"),
+                                                barTint:           .hex("#E6EFE5"),
+                                                stressTint:        .hex("#54904F"),
+                                                markedTint:        .hex("#54904E"),
+                                                primaryTint:       .hex("#333333"),
+                                                primaryText:       .hex("#333333"),
+                                                secondaryText:     .hex("#666666"),
+                                                separatorTint:     .hex("#CAD7C8"),
+                                                indicator:         .hex("#BFCBBD"),
+                                                segmentBackground: .hex("#CAD7C8"),
+                                                segmentTint:       .hex("#E6EFE5"),
+                                                thumbTintColor:    .hex("#E6EFE5"),
+                                                placeholderTint:   .hex("#CAD7C8"),
+                                                placeholderText:   .hex("#999999"),
+                                                normalImage:       .none,
+                                                selectedImage:     .module(named: "ic_theme_selected")?.withTintColor(.hex("#54904F")))
     /// 浅灰蓝
-    internal static var powderBlue: Theme {
-        return .init(uniqueID:          .powderBlue,
-                     background:        .hex("#CED8E2"),
-                     barTint:           .hex("#E0EBF7"),
-                     stressTint:        .hex("#567CA2"),
-                     markedTint:         .hex("#54904E"),
-                     primaryTint:       .hex("#333333"),
-                     primaryText:       .hex("#333333"),
-                     secondaryText:     .hex("#666666"),
-                     separatorTint:     .hex("#C3CCD6"),
-                     indicator:         .hex("#B9C1CA"),
-                     segmentBackground: .hex("#C3CCD6"),
-                     segmentTint:       .hex("#E0EBF7"),
-                     thumbTintColor:    .hex("#E0EBF7"),
-                     placeholderTint:   .hex("#C3CCD6"),
-                     placeholderText:   .hex("#999999"),
-                     normalImage:       .none,
-                     selectedImage:     .module(named: "ic_theme_selected")?.withTintColor(.hex("#567CA2")))
-    }
+    internal static let powderBlue: Theme = .init(uniqueID:          .powderBlue,
+                                                  background:        .hex("#CED8E2"),
+                                                  barTint:           .hex("#E0EBF7"),
+                                                  stressTint:        .hex("#567CA2"),
+                                                  markedTint:        .hex("#54904E"),
+                                                  primaryTint:       .hex("#333333"),
+                                                  primaryText:       .hex("#333333"),
+                                                  secondaryText:     .hex("#666666"),
+                                                  separatorTint:     .hex("#C3CCD6"),
+                                                  indicator:         .hex("#B9C1CA"),
+                                                  segmentBackground: .hex("#C3CCD6"),
+                                                  segmentTint:       .hex("#E0EBF7"),
+                                                  thumbTintColor:    .hex("#E0EBF7"),
+                                                  placeholderTint:   .hex("#C3CCD6"),
+                                                  placeholderText:   .hex("#999999"),
+                                                  normalImage:       .none,
+                                                  selectedImage:     .module(named: "ic_theme_selected")?.withTintColor(.hex("#567CA2")))
     
     /// 米白色
-    internal static var offWhite: Theme {
-        return .init(uniqueID:          .offWhite,
-                     background:        .hex("#F6F6F6"),
-                     barTint:           .hex("#FEFEFE"),
-                     stressTint:        .hex("#3D82F2"),
-                     markedTint:        .hex("#54904E"),
-                     primaryTint:       .hex("#333333"),
-                     primaryText:       .hex("#333333"),
-                     secondaryText:     .hex("#666666"),
-                     separatorTint:     .hex("#E9E9E9"),
-                     indicator:         .hex("#DCDCDC"),
-                     segmentBackground: .hex("#E9E9E9"),
-                     segmentTint:       .hex("#FFFFFF"),
-                     thumbTintColor:    .hex("#FEFEFE"),
-                     placeholderTint:   .hex("#E9E9E9"),
-                     placeholderText:   .hex("#999999"),
-                     normalImage:       .none,
-                     selectedImage:     .module(named: "ic_theme_selected")?.withTintColor(.hex("#3D82F2")))
-    }
+    internal static let offWhite: Theme = .init(uniqueID:          .offWhite,
+                                                background:        .hex("#F6F6F6"),
+                                                barTint:           .hex("#FEFEFE"),
+                                                stressTint:        .hex("#3D82F2"),
+                                                markedTint:        .hex("#54904E"),
+                                                primaryTint:       .hex("#333333"),
+                                                primaryText:       .hex("#333333"),
+                                                secondaryText:     .hex("#666666"),
+                                                separatorTint:     .hex("#E9E9E9"),
+                                                indicator:         .hex("#DCDCDC"),
+                                                segmentBackground: .hex("#E9E9E9"),
+                                                segmentTint:       .hex("#FFFFFF"),
+                                                thumbTintColor:    .hex("#FEFEFE"),
+                                                placeholderTint:   .hex("#E9E9E9"),
+                                                placeholderText:   .hex("#999999"),
+                                                normalImage:       .none,
+                                                selectedImage:     .module(named: "ic_theme_selected")?.withTintColor(.hex("#3D82F2")))
     
     /// 燕麦色
-    internal static var oatmeal: Theme {
-        return .init(uniqueID:          .oatmeal,
-                     background:        .hex("#F7F0E6"),
-                     barTint:           .hex("#FFFCF8"),
-                     stressTint:        .hex("#C59F69"),
-                     markedTint:         .hex("#54904E"),
-                     primaryTint:       .hex("#333333"),
-                     primaryText:       .hex("#333333"),
-                     secondaryText:     .hex("#666666"),
-                     separatorTint:     .hex("#EAE3DA"),
-                     indicator:         .hex("#DDD7CE"),
-                     segmentBackground: .hex("#EAE3DA"),
-                     segmentTint:       .hex("#FFFCF8"),
-                     thumbTintColor:    .hex("#FBF7F2"),
-                     placeholderTint:   .hex("#EAE3DA"),
-                     placeholderText:   .hex("#999999"),
-                     normalImage:       .none,
-                     selectedImage:     .module(named: "ic_theme_selected")?.withTintColor(.hex("#C59F69")))
-    }
+    internal static let oatmeal: Theme = .init(uniqueID:          .oatmeal,
+                                               background:        .hex("#F7F0E6"),
+                                               barTint:           .hex("#FFFCF8"),
+                                               stressTint:        .hex("#C59F69"),
+                                               markedTint:         .hex("#54904E"),
+                                               primaryTint:       .hex("#333333"),
+                                               primaryText:       .hex("#333333"),
+                                               secondaryText:     .hex("#666666"),
+                                               separatorTint:     .hex("#EAE3DA"),
+                                               indicator:         .hex("#DDD7CE"),
+                                               segmentBackground: .hex("#EAE3DA"),
+                                               segmentTint:       .hex("#FFFCF8"),
+                                               thumbTintColor:    .hex("#FBF7F2"),
+                                               placeholderTint:   .hex("#EAE3DA"),
+                                               placeholderText:   .hex("#999999"),
+                                               normalImage:       .none,
+                                               selectedImage:     .module(named: "ic_theme_selected")?.withTintColor(.hex("#C59F69")))
     
     /// 曜石黑
-    internal static var jetBlack: Theme {
-        return .init(uniqueID:          .jetBlack,
-                     background:        .hex("#111111"),
-                     barTint:           .hex("#222222"),
-                     stressTint:        .hex("#3D82F2"),
-                     markedTint:         .hex("#54904E"),
-                     primaryTint:       .hex("#CCCCCC"),
-                     primaryText:       .hex("#CCCCCC"),
-                     secondaryText:     .hex("#999999"),
-                     separatorTint:     .hex("#333333"),
-                     indicator:         .hex("#666666"),
-                     segmentBackground: .hex("#333333"),
-                     segmentTint:       .hex("#222222"),
-                     thumbTintColor:    .hex("#333333"),
-                     placeholderTint:   .hex("#333333"),
-                     placeholderText:   .hex("#666666"),
-                     normalImage:       .module(named: "ic_theme_moon")?.withTintColor(.hex("#CCCCCC")),
-                     selectedImage:     .module(named: "ic_theme_moon")?.withTintColor(.hex("#CCCCCC")))
-    }
+    internal static let jetBlack: Theme = .init(uniqueID:          .jetBlack,
+                                                background:        .hex("#111111"),
+                                                barTint:           .hex("#222222"),
+                                                stressTint:        .hex("#3D82F2"),
+                                                markedTint:        .hex("#54904E"),
+                                                primaryTint:       .hex("#CCCCCC"),
+                                                primaryText:       .hex("#777777"),
+                                                secondaryText:     .hex("#999999"),
+                                                separatorTint:     .hex("#333333"),
+                                                indicator:         .hex("#666666"),
+                                                segmentBackground: .hex("#333333"),
+                                                segmentTint:       .hex("#222222"),
+                                                thumbTintColor:    .hex("#333333"),
+                                                placeholderTint:   .hex("#333333"),
+                                                placeholderText:   .hex("#666666"),
+                                                normalImage:       .module(named: "ic_theme_moon")?.withTintColor(.hex("#CCCCCC")),
+                                                selectedImage:     .module(named: "ic_theme_moon")?.withTintColor(.hex("#CCCCCC")))
 }
 
 /// UserDefaultsKey
@@ -320,29 +309,15 @@ fileprivate struct UserDefaultsKey: RawRepresentable {
 extension UserDefaultsKey {
     
     /// Parchment-Configuration-UserDefaults-Key-transitionStyle
-    internal static var transitionStyle: UserDefaultsKey {
-        return .init(rawValue: "Parchment-Configuration-UserDefaults-Key-transitionStyle")
-    }
-    
+    internal static let transitionStyle: UserDefaultsKey = .init(rawValue: "Parchment-Configuration-UserDefaults-Key-transitionStyle")
     /// Parchment-Configuration-UserDefaults-Key-navigationOrientation
-    internal static var navigationOrientation: UserDefaultsKey {
-        return .init(rawValue: "Parchment-Configuration-UserDefaults-Key-navigationOrientation")
-    }
-    
+    internal static let navigationOrientation: UserDefaultsKey = .init(rawValue: "Parchment-Configuration-UserDefaults-Key-navigationOrientation")
     /// Parchment-Configuration-UserDefaults-Key-themeID
-    internal static var themeID: UserDefaultsKey {
-       return .init(rawValue: "Parchment-Configuration-UserDefaults-Key-themeID")
-    }
-    
+    internal static let themeID: UserDefaultsKey = .init(rawValue: "Parchment-Configuration-UserDefaults-Key-themeID")
     /// Parchment-Configuration-UserDefaults-Key-brightness
-    internal static var brightness: UserDefaultsKey {
-        return .init(rawValue: "Parchment-Configuration-UserDefaults-Key-brightness")
-    }
-    
+    internal static let brightness: UserDefaultsKey = .init(rawValue: "Parchment-Configuration-UserDefaults-Key-brightness")
     /// Parchment-Configuration-UserDefaults-Key-font
-    internal static var font: UserDefaultsKey {
-        return .init(rawValue: "Parchment-Configuration-UserDefaults-Key-font")
-    }
+    internal static let font: UserDefaultsKey = .init(rawValue: "Parchment-Configuration-UserDefaults-Key-font")
 }
 
 #endif
