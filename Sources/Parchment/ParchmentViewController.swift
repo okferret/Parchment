@@ -225,14 +225,21 @@ extension ParchmentViewController {
     ///   - useCached: Bool
     ///   - priority: TaskPriority
     private func parseWith(_ fileURL: URL, useCached: Bool = true, priority: TaskPriority = .userInitiated) {
-        // @MainActor：UI 操作（loadingView/menuController/gotoPage/present）在主线程执行；
-        // 真正的耗时解析由 BookHelper.parseWith 内部 Task(priority:) 切换到后台，await 期间不阻塞主线程。
         Task<Void, Error>(priority: priority) { @MainActor in
-            guard let keyWindow = UIApplication.shared.hub.keyWindow else { return }
-            let safeAreaInsets: UIEdgeInsets = BookHelper.safeAreaInsets
-            let safeArea: CGSize = keyWindow.bounds.inset(by: safeAreaInsets).size
+            // prepare
+            pageViewController?.gestureRecognizers.forEach { $0.isEnabled = false }
+            tapGesture.isEnabled = false
             loadingView.hub.startAnimating()
+            defer {
+                pageViewController?.gestureRecognizers.forEach { $0.isEnabled = true }
+                tapGesture.isEnabled = true
+                loadingView.hub.stopAnimating()
+            }
+            // next
             do {
+                guard let keyWindow = UIApplication.shared.hub.keyWindow else { return }
+                let safeAreaInsets: UIEdgeInsets = BookHelper.safeAreaInsets
+                let safeArea: CGSize = keyWindow.bounds.inset(by: safeAreaInsets).size
                 let newWant: BookEntity.Want = try await BookHelper.parseWith(fileURL,
                                                                               safeArea: safeArea,
                                                                               textAttributes: configuration.textAttributes,
@@ -248,12 +255,11 @@ extension ParchmentViewController {
                 }
             } catch {
                 let controller: UIAlertController = .init(title: "操作提醒", message: error.localizedDescription, preferredStyle: .alert)
-                controller.addAction(.init(title: "关闭", style: .default, handler: { _ in
-                    self.dismiss(animated: true, completion: .none)
-                }))
+                controller.hub.addAction(title: "关闭") {[weak self] in
+                    self?.dismiss(animated: true, completion: .none)
+                }
                 present(controller, animated: true, completion: .none)
             }
-            loadingView.hub.stopAnimating()
         }
     }
     
@@ -429,8 +435,7 @@ extension ParchmentViewController {
         if let newWant: PageEntity.Want = bookWant.pageAt(newIndex) {
             tapGesture.isEnabled = false
             gotoPageWith(newWant, direction: .forward, animated: true) {[weak self] in
-                guard let this = self, let transitionStyle = this.pageViewController?.transitionStyle else { return }
-                this.tapGesture.isEnabled = true
+                self?.tapGesture.isEnabled = true
             }
         }
     }
@@ -444,8 +449,7 @@ extension ParchmentViewController {
         if let newWant: PageEntity.Want = bookWant.pageAt(newIndex) {
             tapGesture.isEnabled = false
             gotoPageWith(newWant, direction: .reverse, animated: true) {[weak self] in
-                guard let this = self, let transitionStyle = this.pageViewController?.transitionStyle else { return }
-                this.tapGesture.isEnabled = true
+                self?.tapGesture.isEnabled = true
             }
         }
     }
